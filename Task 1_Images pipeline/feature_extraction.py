@@ -18,10 +18,9 @@ def apply_sift(data):
         # Get the sift keypoints and the corresponding descriptors
         sift = cv2.SIFT_create()
         kp, des = sift.detectAndCompute(img, None)
-        if 'sift_keypoints' not in data.keys():
-            print('created list')
-            data['sift_keypoints'] = []
-        data['sift_keypoints'].append(kp)
+        if 'sift_description' not in data.keys():
+            data['sift_description'] = []
+        data['sift_description'].append(des)
     return data
 
 if __name__ == '__main__':
@@ -33,5 +32,6 @@ if __name__ == '__main__':
     # for keypoints in data['sift_keypoints'][:5]:
     #     print('\n')
     #     for d in keypoints:
-    #         print(str(d.angle) + ' ' + str(d.class_id) + ' ' + str(d.octave) + ' ' + str(d.pt)  + ' ' +
-    #         str(d.response) + ' ' + str(d.size))
+    #         print(d)
+    #         # print(str(d.angle) + ' ' + str(d.class_id) + ' ' + str(d.octave) + ' ' + str(d.pt)  + ' ' +
+    #         # str(d.response) + ' ' + str(d.size))
