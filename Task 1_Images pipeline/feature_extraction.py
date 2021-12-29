@@ -4,8 +4,6 @@ import joblib
 from sklearn.cluster import KMeans
 
 
-
-
 def cluster_sift_descriptions(data, NUM_CLUSTERS):
     #Prepare data
     print("Training kmeans")

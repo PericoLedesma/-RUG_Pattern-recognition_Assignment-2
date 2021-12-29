@@ -10,6 +10,8 @@ from feature_extraction import calculate_histogram
 width = 80
 base_name = 'big_cats'
 
+n_clusters = 20
+
 def main():
     #Read the data
     print("Reading data...")
@@ -25,7 +27,7 @@ def main():
     #--- SIFT --- #
     data = apply_sift(data)
 
-    model = cluster_sift_descriptions(data, NUM_CLUSTERS = 5)
+    model = cluster_sift_descriptions(data, NUM_CLUSTERS = n_clusters)
 
     X, y = calculate_histogram(data, model)
 
