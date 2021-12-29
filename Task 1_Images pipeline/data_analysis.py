@@ -2,13 +2,14 @@ from collections import Counter
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+
 def analyze_data(data):
     """Analyze the data
 
     Args:
         data (dict): Dictionary created by read_data.py
     """
-
 
     # Images per class
     c = Counter(data['label'])
@@ -22,7 +23,7 @@ def analyze_data(data):
         counter = 0
         # Create a 5x5 grid of images
         fig, ax = plt.subplots(5, 5, figsize=(10, 10))
-        for idx, img in enumerate(data['data']):
+        for idx, img in enumerate(data['sift_description']):
             # Show the images of that class
             if data["label"][idx] == img_class:
                 i = int(counter / 5)

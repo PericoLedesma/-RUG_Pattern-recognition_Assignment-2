@@ -7,6 +7,7 @@ import pprint
 from collections import Counter
 pp = pprint.PrettyPrinter(indent = 4)
 import joblib
+from data_analysis import analyze_data
 from skimage.io import imread
 from skimage.transform import resize
 import os
@@ -42,7 +43,7 @@ def print_summary(data):
     print('labels', np.unique(data['label']))
     print('description: ', data['description'])
 
-def main():
+def main_read_data():
     data_path = 'data/BigCats/' #Specify data path
     classes = os.listdir(data_path) #Define classes
     if '.DS_Store' in classes: classes.remove('.DS_Store') #For Mac Users, unwanted folder
@@ -54,7 +55,4 @@ def main():
     # Read the data
     read_data(src = data_path, pklname = base_name, width = width, include = include)
     data = joblib.load(f'{base_name}_{width}x{width}px.pkl')
-
-
-if __name__ == "__main__":
-    main()
+    return data
