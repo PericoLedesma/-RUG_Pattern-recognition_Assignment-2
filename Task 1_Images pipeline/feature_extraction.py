@@ -75,7 +75,7 @@ def apply_sift(data):
 
 if __name__ == '__main__':
     base_name = 'big_cats'
-    width = 80
+    width = 0
     data = joblib.load(f'{base_name}_{width}x{width}px.pkl')
     data = apply_sift(data)
     # Temporary print loop (to analyze the data)

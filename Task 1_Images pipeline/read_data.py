@@ -32,7 +32,7 @@ def read_data(src, pklname, include, width = 150, height = None):
             for file in os.listdir(current_path):
                 if file.endswith('.jpg') or file.endswith('.png') or file.endswith('.jpeg'):
                     im = imread(os.path.join(current_path, file))
-                    im = resize(im, (width, height))
+                    # im = resize(im, (width, height))
                     data['label'].append(subdir)
                     data['filename'].append(file)
                     data['data'].append(im)
@@ -49,7 +49,7 @@ def main_read_data():
     if '.DS_Store' in classes: classes.remove('.DS_Store') #For Mac Users, unwanted folder
 
     base_name = 'big_cats'
-    width = 80
+    width = 0
     include = {'Leopard', 'Tiger', 'Cheetah', 'Jaguar', 'Lion'} #Include the wanted classes
 
     # Read the data
