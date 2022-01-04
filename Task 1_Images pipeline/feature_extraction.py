@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import joblib
+import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 
 
@@ -31,22 +32,47 @@ def get_class(animal):
         print(animal)
     return class_as_number
 
-def calculate_histogram(data, model):
+
+def calculate_histogram(data, model, VISUALIZE=False):
     feature_vector = []
     label_vector = []
 
     #Make prediction to what class the keypoint belong and make a histogram of that
     idx = 0
-    for img in data['sift_description']:
+    for img_des in data['sift_description']:
         #Predict and create histogram
-        predict_kmeans = model.predict(img)
+        predict_kmeans = model.predict(img_des)
         hist, bin_edges = np.histogram(predict_kmeans)
+        # Normalize the histogram
+        hist = hist / len(data['sift_keypoints'][idx])
         feature_vector.append(hist)
 
         #Create target vector for classification
         label = get_class(data['label'][idx])
         label_vector.append(label)
         idx = idx + 1
+
+    if VISUALIZE:
+        all_histograms = []
+        cur_label = label_vector[0]
+        avg_hist = np.zeros(len(feature_vector[0]))
+        all_histograms.append(avg_hist)
+        # Loop through the label_vector
+        for i in range(len(label_vector)):
+            if label_vector[i] == cur_label:
+                avg_hist = avg_hist + feature_vector[i]
+                # TODO still need division
+            else:
+                cur_label = label_vector[i]
+                avg_hist = feature_vector[i]
+                all_histograms.append(avg_hist)
+
+        # Plot the histograms
+        for i in range(len(all_histograms)):
+            plt.bar(np.arange(len(all_histograms[i])), all_histograms[i])
+            plt.show()
+
+
 
     return feature_vector, label_vector
 
@@ -68,8 +94,11 @@ def apply_sift(data):
         kp, des = sift.detectAndCompute(img, None)
         if 'sift_description' not in data.keys():
             data['sift_description'] = []
+        if 'sift_keypoints' not in data.keys():
+            data['sift_keypoints'] = []
 
         data['sift_description'].append(des)
+        data['sift_keypoints'].append(kp)
 
     return data
 

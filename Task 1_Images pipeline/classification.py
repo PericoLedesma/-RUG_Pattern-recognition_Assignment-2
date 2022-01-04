@@ -11,7 +11,7 @@ def do_svm(train_featvec, target):
     # https://scikit-learn.org/stable/auto_examples/svm/plot_rbf_parameters.html
     C_range = np.logspace(-2, 10, 13)
     gammas = ['scale', 'auto']
-    kernels = ['linear', 'poly', 'rbf', 'sigmoid', 'precomputed']
+    kernels = ['linear', 'poly', 'rbf', 'sigmoid']
     param_grid = dict(gamma=gammas, C=C_range, kernel=kernels)
     cv = StratifiedShuffleSplit(n_splits=5, test_size=0.2, random_state=42)
     grid = GridSearchCV(svm.SVC(), param_grid=param_grid, cv=cv)
