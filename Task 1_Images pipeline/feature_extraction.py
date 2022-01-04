@@ -6,14 +6,15 @@ from sklearn.cluster import KMeans
 
 
 def cluster_sift_descriptions(data, NUM_CLUSTERS):
-    #Prepare data
+    # Prepare data
     print("Training kmeans")
-    #Create model
-    kmeans = KMeans(n_clusters = NUM_CLUSTERS, random_state = 0)
-    #train model
-    sift_descriptors = np.concatenate(data['sift_description'], axis = 0)
+    # Create model
+    kmeans = KMeans(n_clusters=NUM_CLUSTERS, random_state=0)
+    # train model
+    sift_descriptors = np.concatenate(data['sift_description'], axis=0)
     kmeans.fit(sift_descriptors)
     return kmeans
+
 
 def get_class(animal):
     class_as_number = 0
@@ -32,22 +33,35 @@ def get_class(animal):
         print(animal)
     return class_as_number
 
+def get_name_by_number(class_number):
+    if class_number == 1:
+        return 'Cheetah'
+    if class_number == 2:
+        return 'Jaguar'
+    if class_number == 3:
+        return 'Leopard'
+    if class_number == 4:
+        return 'Lion'
+    if class_number == 5:
+        return 'Tiger'
+    return 'UNKNOWN'
+
 
 def calculate_histogram(data, model, VISUALIZE=False):
     feature_vector = []
     label_vector = []
 
-    #Make prediction to what class the keypoint belong and make a histogram of that
+    # Make prediction to what class the keypoint belong and make a histogram of that
     idx = 0
     for img_des in data['sift_description']:
-        #Predict and create histogram
+        # Predict and create histogram
         predict_kmeans = model.predict(img_des)
-        hist, bin_edges = np.histogram(predict_kmeans)
+        hist, bin_edges = np.histogram(predict_kmeans, bins=20)
         # Normalize the histogram
         hist = hist / len(data['sift_keypoints'][idx])
         feature_vector.append(hist)
 
-        #Create target vector for classification
+        # Create target vector for classification
         label = get_class(data['label'][idx])
         label_vector.append(label)
         idx = idx + 1
@@ -55,27 +69,34 @@ def calculate_histogram(data, model, VISUALIZE=False):
     if VISUALIZE:
         all_histograms = []
         cur_label = label_vector[0]
+        hist_labels = [cur_label]
         avg_hist = np.zeros(len(feature_vector[0]))
-        all_histograms.append(avg_hist)
         # Loop through the label_vector
         for i in range(len(label_vector)):
             if label_vector[i] == cur_label:
                 avg_hist = avg_hist + feature_vector[i]
-                # TODO still need division
             else:
+                all_histograms.append(avg_hist/10)
                 cur_label = label_vector[i]
+                hist_labels.append(cur_label)
                 avg_hist = feature_vector[i]
-                all_histograms.append(avg_hist)
+        all_histograms.append(avg_hist/10)
 
-        # Plot the histograms
+        # Plot the histograms in a single barplot next to each other
+        ind = np.arange(len(all_histograms[0]))
+        width = 0.15
+        fig, ax = plt.subplots()
         for i in range(len(all_histograms)):
-            plt.bar(np.arange(len(all_histograms[i])), all_histograms[i])
-            plt.show()
-
-
+            ax.bar(ind + (i * width), all_histograms[i], width, label=get_name_by_number(hist_labels[i]))
+        ax.set_xticks(ind + width*0.5)
+        ax.set_ylabel('Frequency')
+        ax.set_xlabel('Cluster')
+        ax.set_title('Histogram of SIFT keypoints')
+        ax.set_xticks(ind)
+        ax.legend()
+        plt.show()
 
     return feature_vector, label_vector
-
 
 
 # -- SIFT --
@@ -101,6 +122,7 @@ def apply_sift(data):
         data['sift_keypoints'].append(kp)
 
     return data
+
 
 if __name__ == '__main__':
     base_name = 'big_cats'

@@ -25,7 +25,7 @@ def main():
 
     # MAX_DATA indicates the number of images to be read from each class
     # Since this is used for testing, the pickle file is created with the addition '_test'
-    data = main_read_data(MAX_DATA=10)
+    data = main_read_data()
 
     #Print a summary of the data based on user input
     #print_summary = input("Do you want to print a summary of the data and see the images? Yes: 1, No: 0\n")
