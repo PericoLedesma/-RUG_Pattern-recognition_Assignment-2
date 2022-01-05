@@ -67,6 +67,7 @@ def calculate_histogram(data, model, VISUALIZE=False):
         idx = idx + 1
 
     if VISUALIZE:
+
         all_histograms = []
         cur_label = label_vector[0]
         hist_labels = [cur_label]
@@ -76,11 +77,12 @@ def calculate_histogram(data, model, VISUALIZE=False):
             if label_vector[i] == cur_label:
                 avg_hist = avg_hist + feature_vector[i]
             else:
-                all_histograms.append(avg_hist/10)
+                # Count the appearance of cur_label in the label_vector
+                all_histograms.append(avg_hist/label_vector.count(cur_label))
                 cur_label = label_vector[i]
                 hist_labels.append(cur_label)
                 avg_hist = feature_vector[i]
-        all_histograms.append(avg_hist/10)
+        all_histograms.append(avg_hist/label_vector.count(cur_label))
 
         # Plot the histograms in a single barplot next to each other
         ind = np.arange(len(all_histograms[0]))
