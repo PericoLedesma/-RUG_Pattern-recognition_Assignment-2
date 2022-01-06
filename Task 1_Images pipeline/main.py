@@ -22,7 +22,7 @@ n_clusters = 20
 
 def main():
     # Debug mode
-    DEBUG  = True
+    DEBUG  = False
     # Visualize the data in plots
     VISUALIZE = False
 

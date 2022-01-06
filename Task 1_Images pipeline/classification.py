@@ -26,9 +26,9 @@ def train_model(train_featvec, target, n_models = 3, DEBUG=False):
 
     Returns:
         tuple: (mean score, ensemble model)
-    """    
+    """
 
-    import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
 
     # Set the parameters for the grid search
     # SVM
@@ -57,14 +57,14 @@ def train_model(train_featvec, target, n_models = 3, DEBUG=False):
 
     # Create the pipeline
     pipeline = Pipeline([('classifier', SVC())])
-    gird_search_params = [svm_params, logr_params, linr_params]
+    grid_search_params = [svm_params, logr_params, linr_params]
 
 
     cv = StratifiedShuffleSplit(n_splits=5, test_size=0.2, random_state=42)
 
     # TODO add scoring (e.g. scoring = roc_auc_score)
     # n_jobs=-1 means that all CPUs will be used
-    grid = GridSearchCV(pipeline, param_grid=gird_search_params,
+    grid = GridSearchCV(pipeline, param_grid=grid_search_params,
                         cv=cv, n_jobs=-1, error_score=0.0, verbose=0)
     grid.fit(train_featvec, target)
 
