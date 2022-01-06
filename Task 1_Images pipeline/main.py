@@ -6,14 +6,15 @@ import os.path
 from feature_extraction import cluster_sift_descriptions
 from classification import train_model
 from feature_extraction import calculate_histogram
-
+from classification import get_accuracy_cross_validation
+from classification import train_SVM_model
+from feature_extraction import apply_pca
+from data_analysis import plot_pca_components_variance
 width = 80
 base_name = 'big_cats'
 
-n_clusters = 20
+n_clusters = 40
 
-# TODO Normalize the histogram (divide by the number of keypoints)
-# TODO Add KP to data object
 # TODO PCA for Kmeans
 # TODO Other classifiers/ ensemble methods
 # TODO Visualize histogram/cluters
@@ -41,11 +42,19 @@ def main():
 
     model = cluster_sift_descriptions(data, NUM_CLUSTERS=n_clusters)
 
-    X, y = calculate_histogram(data, model, VISUALIZE=VISUALIZE)
+    X, y = calculate_histogram(data, model, n_clusters, VISUALIZE=VISUALIZE)
+
+    #----------Apply PCA----------#
+    plot_pca_components_variance(X)
+    #pca_X = apply_pca(X)
 
     # Train an ensemble of classifiers
-    accuracy, model = train_model(X, y, n_models=10, DEBUG=DEBUG)
-    print(accuracy)
+    #accuracy, model = train_model(X, y, n_models=10, DEBUG=DEBUG)
+    #model = train_SVM_model(X, y)
+
+    #accuracy = get_accuracy_cross_validation(model, X, y)
+    #print("Number of clusters: ", n_clusters)
+    #print("accuracy = ",  accuracy, "\n")
 
 
 if __name__ == "__main__":

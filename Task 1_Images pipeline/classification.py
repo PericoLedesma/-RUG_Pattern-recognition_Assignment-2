@@ -15,6 +15,32 @@ from sklearn.linear_model import LinearRegression
 # https://scikit-learn.org/stable/auto_examples/svm/plot_rbf_parameters.html
 # https://towardsdatascience.com/how-to-tune-multiple-ml-models-with-gridsearchcv-at-once-9fcebfcc6c23
 
+def get_accuracy_cross_validation(model, train_featvec, target):
+    # Cross validate the ensemble
+    cv = StratifiedShuffleSplit(n_splits=5, test_size=0.2, random_state=43)
+    accuracy = cross_val_score(model, train_featvec, target, cv=cv)
+    mean_accuracy = np.mean(accuracy)
+    print('Ensemble mean score: ', mean_accuracy)
+    return mean_accuracy
+
+def train_SVM_model(train_featvec, target):
+    """Train a support vector machine
+
+    Args:
+        train_featvec (List): List of feature vectors
+        target (List): List of target values
+
+    Returns:
+        model: Trained SVM model
+    """
+    svm = SVC()
+
+    #Train model
+    svm.fit(train_featvec, target)
+
+    return svm
+
+
 def train_model(train_featvec, target, n_models = 3, DEBUG=False):
     """Train an ensemble of classifiers
 
@@ -75,7 +101,6 @@ def train_model(train_featvec, target, n_models = 3, DEBUG=False):
         "The best parameters are %s with a score of %0.2f"
         % (grid.best_params_, grid.best_score_)
     )
-    import pdb; pdb.set_trace()
 
     # Order the results of the grid search by the best score
     order_by_rank = pd.DataFrame(

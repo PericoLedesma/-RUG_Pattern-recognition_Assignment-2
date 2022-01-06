@@ -1,8 +1,15 @@
 from collections import Counter
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.decomposition import PCA
 
-
+def plot_pca_components_variance(train_featvec):
+    pca = PCA().fit(train_featvec)
+    plt.plot(np.cumsum(pca.explained_variance_ratio_))
+    plt.xlabel('number of components')
+    plt.ylabel('cumulative explained variance')
+    #plt.show()
+    plt.savefig('figures/40_clusters_explained_variance.png')
 
 def analyze_data(data):
     """Analyze the data

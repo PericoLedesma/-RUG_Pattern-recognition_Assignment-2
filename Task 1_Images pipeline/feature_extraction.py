@@ -3,6 +3,20 @@ import numpy as np
 import joblib
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+
+def apply_pca(train_featvec):
+    """This function applies PCA on the features
+    Args:
+        train_featvec (List): List of the feature vectors
+    Returns:
+        pca_data: The data transformed in the dimensions with the highest explained variance
+    """
+    pca = PCA(n_components = 10)
+    pca.fit(train_featvec)
+    pca_data = pca.transform(train_featvec)
+    
+    return pca_data
 
 
 def cluster_sift_descriptions(data, NUM_CLUSTERS):
@@ -47,7 +61,7 @@ def get_name_by_number(class_number):
     return 'UNKNOWN'
 
 
-def calculate_histogram(data, model, VISUALIZE=False):
+def calculate_histogram(data, model, n_clusters, VISUALIZE=False):
     feature_vector = []
     label_vector = []
 
@@ -56,7 +70,7 @@ def calculate_histogram(data, model, VISUALIZE=False):
     for img_des in data['sift_description']:
         # Predict and create histogram
         predict_kmeans = model.predict(img_des)
-        hist, bin_edges = np.histogram(predict_kmeans, bins=20)
+        hist, bin_edges = np.histogram(predict_kmeans, bins=n_clusters)
         # Normalize the histogram
         hist = hist / len(data['sift_keypoints'][idx])
         feature_vector.append(hist)
