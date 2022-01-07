@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import StratifiedShuffleSplit
@@ -22,6 +22,22 @@ def get_accuracy_cross_validation(model, train_featvec, target):
     mean_accuracy = np.mean(accuracy)
     print('Ensemble mean score: ', mean_accuracy)
     return mean_accuracy
+
+def train_RF_model(train_featvec, target):
+    """Train a random forest classifier
+
+    Args:
+        train_featvec (List): List of feature vectors
+        target (List):
+
+    Returns:
+        model: trained RF model
+    """
+
+    rf = RandomForestClassifier(n_estimators = 50, max_depth = 3)
+    rf.fit(train_featvec, target)
+
+    return rf
 
 def train_SVM_model(train_featvec, target):
     """Train a support vector machine
@@ -75,15 +91,10 @@ def train_model(train_featvec, target, n_models = 3, DEBUG=False):
     logr_params['classifier__C'] = np.logspace(-2, 3, 6)
     logr_params['classifier'] = [clf2]
 
-    clf3 = LinearRegression()
-    # TODO extend the amount of parameters
-    linr_params = {}
-    linr_params['classifier'] = [clf3]
-
 
     # Create the pipeline
     pipeline = Pipeline([('classifier', SVC())])
-    grid_search_params = [svm_params, logr_params, linr_params]
+    grid_search_params = [svm_params, logr_params]
 
 
     cv = StratifiedShuffleSplit(n_splits=5, test_size=0.2, random_state=42)

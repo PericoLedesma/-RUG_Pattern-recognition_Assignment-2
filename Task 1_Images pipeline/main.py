@@ -10,10 +10,11 @@ from classification import get_accuracy_cross_validation
 from classification import train_SVM_model
 from feature_extraction import apply_pca
 from data_analysis import plot_pca_components_variance
+from classification import train_RF_model
 width = 80
 base_name = 'big_cats'
 
-n_clusters = 40
+n_clusters = 100
 
 # TODO PCA for Kmeans
 # TODO Other classifiers/ ensemble methods
@@ -45,16 +46,19 @@ def main():
     X, y = calculate_histogram(data, model, n_clusters, VISUALIZE=VISUALIZE)
 
     #----------Apply PCA----------#
-    plot_pca_components_variance(X)
-    #pca_X = apply_pca(X)
+    #plot_pca_components_variance(X)
+    X = apply_pca(X)
 
     # Train an ensemble of classifiers
-    #accuracy, model = train_model(X, y, n_models=10, DEBUG=DEBUG)
-    #model = train_SVM_model(X, y)
+    accuracy, model = train_model(X, y, n_models=10, DEBUG=DEBUG)
+    svm_model = train_SVM_model(X, y)
+    rf_model = train_RF_model(X, y)
 
-    #accuracy = get_accuracy_cross_validation(model, X, y)
-    #print("Number of clusters: ", n_clusters)
-    #print("accuracy = ",  accuracy, "\n")
+    accuracy_svm = get_accuracy_cross_validation(rf_model, X, y)
+    accuracy_rf = get_accuracy_cross_validation(svm_model, X, y)
+    print("Number of clusters: ", n_clusters)
+    print("accuracy rf = ",  accuracy_rf, "\n")
+    print("accuracy svm = ",  accuracy_svm, "\n")
 
 
 if __name__ == "__main__":

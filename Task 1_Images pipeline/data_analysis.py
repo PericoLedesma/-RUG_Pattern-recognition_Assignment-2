@@ -9,7 +9,7 @@ def plot_pca_components_variance(train_featvec):
     plt.xlabel('number of components')
     plt.ylabel('cumulative explained variance')
     #plt.show()
-    plt.savefig('figures/40_clusters_explained_variance.png')
+    plt.savefig('figures/100_clusters_explained_variance.png')
 
 def analyze_data(data):
     """Analyze the data

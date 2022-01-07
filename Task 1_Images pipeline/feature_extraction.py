@@ -12,10 +12,10 @@ def apply_pca(train_featvec):
     Returns:
         pca_data: The data transformed in the dimensions with the highest explained variance
     """
-    pca = PCA(n_components = 10)
+    pca = PCA(n_components = 80)
     pca.fit(train_featvec)
     pca_data = pca.transform(train_featvec)
-    
+
     return pca_data
 
 
