@@ -118,7 +118,7 @@ def calculate_histogram(data, model, n_clusters, VISUALIZE=False):
 # -- SIFT --
 # https://www.analyticsvidhya.com/blog/2019/10/detailed-guide-powerful-sift-technique-image-matching-python/
 def apply_sift(data):
-    for img in data['data']:
+    for img in data['image']:
         img = np.float32(img)
         # Grayscale
         img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)

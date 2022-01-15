@@ -12,22 +12,13 @@ from skimage.io import imread
 from skimage.transform import resize
 import os
 
-def read_data(src, pklname, include, width = 150, height = None, MAX_DATA = None):
-
-    height = height if height is not None else width
+def read_data(src, pklname, include, max_data = None):
 
     data = dict()
-    data['description'] = 'resized ({0}x{1}) big cat images in rgb'.format(int(width), int(height))
+    data['description'] = 'big cat images in rgb'
     data['label'] = []
     data['filename'] = []
-    # TODO rename data['data'] to data['images']
-    data['data'] = []
-
-    if MAX_DATA is not None:
-        pklname = f"{pklname}_{width}x{height}px_test.pkl"
-    else:
-        pklname = f"{pklname}_{width}x{height}px.pkl"
-
+    data['image'] = []
 
     # Check if the data is already read
     if os.path.isfile(pklname):
@@ -44,31 +35,37 @@ def read_data(src, pklname, include, width = 150, height = None, MAX_DATA = None
                 if file.endswith('.jpg') or file.endswith('.png') or file.endswith('.jpeg'):
                     counter += 1
                     im = imread(os.path.join(current_path, file))
-                    # im = resize(im, (width, height))
                     data['label'].append(subdir)
                     data['filename'].append(file)
-                    data['data'].append(im)
-                    if MAX_DATA:
-                        if counter >= MAX_DATA:
+                    data['image'].append(im)
+                    if max_data:
+                        if counter >= max_data:
                             break
-        joblib.dump(data, pklname)
     return data
 
+def load_data(pklname):
+    data = None
+    # Check if the data is already read
+    if os.path.isfile(pklname):
+        print(f'File {pklname} already exists. Reading data from pickle file...')
+        data = joblib.load(pklname)
+        return data
+
+def save_data(data, pklname):
+    joblib.dump(data, pklname)
 
 def print_summary(data):
-    print('number of samples: ', len(data['data']))
+    print('number of samples: ', len(data['image']))
     print('labels', np.unique(data['label']))
     print('description: ', data['description'])
 
-def main_read_data(MAX_DATA = None):
+def main_read_data(pklname, max_data = None):
     data_path = 'data/BigCats/' #Specify data path
     classes = os.listdir(data_path) #Define classes
     if '.DS_Store' in classes: classes.remove('.DS_Store') #For Mac Users, unwanted folder
 
-    base_name = 'big_cats'
-    width = 0
     include = {'Leopard', 'Tiger', 'Cheetah', 'Jaguar', 'Lion'} #Include the wanted classes
 
     # Read the data
-    data = read_data(src = data_path, pklname = base_name, width = width, include = include, MAX_DATA = MAX_DATA)
+    data = read_data(src = data_path, pklname = pklname, include = include, max_data = max_data)
     return data

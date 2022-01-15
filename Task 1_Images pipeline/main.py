@@ -24,25 +24,45 @@ n_clusters = 100
 # TODO SetScore
 
 
+# KNN
+# MIRROR in feature extraction
+# Ensemble met random forest
+
+
 def main():
     # Debug mode
-    DEBUG  = True
+    DEBUG  = False
+    MAX_DATA = (10 if DEBUG else None)
     # Visualize the data in plots
     VISUALIZE = False
+    # Use data augmentation
+    AUGMENT = True
+    # Use mirror invariant feature extraction (MIFE)
+    MIFE = False
 
-    # NOTE MAX_DATA indicates the number of images to be read from each class
-    # Since this is used for testing, the pickle file is created with the addition '_test'
-    data = main_read_data(MAX_DATA=(10 if DEBUG else None))
+    pklname = f"big_cats_{'augment' if AUGMENT else ''}_{'debug' if DEBUG else ''}.pkl"
 
-    # Print a summary of the data based on user input
-    #print_summary = input("Do you want to print a summary of the data and see the images? Yes: 1, No: 0\n")
-    #if print_summary == "1": analyze_data(data)
-    
-    # Augment the data
-    augment(data)
+    # Load the data
+    data = load_data(pklname)
+
+    if data is None:
+        # NOTE MAX_DATA indicates the number of images to be read from each class
+        # Since this is used for testing, the pickle file is created with the addition '_test'
+        data = main_read_data(pklname, max_data=MAX_DATA)
+
+        # Print a summary of the data based on user input
+        #print_summary = input("Do you want to print a summary of the data and see the images? Yes: 1, No: 0\n")
+        #if print_summary == "1": analyze_data(data)
+        
+        if AUGMENT:
+            # Augment the data
+            data = augment(data)
+
+        # Save the data to a pickle file
+        save_data(data, pklname)
+
 
     # Start feature extraction
-
     #--- SIFT --- #
     data = apply_sift(data)
 
@@ -59,8 +79,8 @@ def main():
     svm_model = train_SVM_model(X, y)
     rf_model = train_RF_model(X, y)
 
-    accuracy_svm = get_accuracy_cross_validation(rf_model, X, y)
-    accuracy_rf = get_accuracy_cross_validation(svm_model, X, y)
+    accuracy_rf = get_accuracy_cross_validation(rf_model, X, y)
+    accuracy_svm = get_accuracy_cross_validation(svm_model, X, y)
     print("Number of clusters: ", n_clusters)
     print("accuracy rf = ",  accuracy_rf, "\n")
     print("accuracy svm = ",  accuracy_svm, "\n")

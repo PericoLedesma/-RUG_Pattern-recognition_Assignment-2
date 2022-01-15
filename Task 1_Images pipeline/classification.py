@@ -21,7 +21,6 @@ def get_accuracy_cross_validation(model, train_featvec, target):
     cv = StratifiedShuffleSplit(n_splits=5, test_size=0.2, random_state=43)
     accuracy = cross_val_score(model, train_featvec, target, cv=cv)
     mean_accuracy = np.mean(accuracy)
-    print('Ensemble mean score: ', mean_accuracy)
     return mean_accuracy
 
 
