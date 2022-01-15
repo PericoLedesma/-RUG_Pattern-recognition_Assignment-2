@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def augment(data):
+def augment_data(data):
     # Augment the data
     for i in range(len(data['image'])):
         # Mirror the image
@@ -11,3 +11,5 @@ def augment(data):
         data['image'].append(mirrored_image)
         data['filename'].append('augmented_' + data['filename'][i])
     return data
+
+

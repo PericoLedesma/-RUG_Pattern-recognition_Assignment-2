@@ -11,8 +11,9 @@ from data_analysis import analyze_data
 from skimage.io import imread
 from skimage.transform import resize
 import os
+from data_augmentation import augment_data
 
-def read_data(src, pklname, include, max_data = None):
+def read_data(src, pklname, include, augment=False, max_data = None):
 
     data = dict()
     data['description'] = 'big cat images in rgb'
@@ -25,7 +26,8 @@ def read_data(src, pklname, include, max_data = None):
         print(f'File {pklname} already exists. Reading data from pickle file...')
         data = joblib.load(pklname)
         return data
-
+    
+    print("Reading images")
     #Read all images in PATH, resize and write to DESTIONATION_PATH
     for subdir in os.listdir(src):
         if subdir in include:
@@ -38,10 +40,19 @@ def read_data(src, pklname, include, max_data = None):
                     data['label'].append(subdir)
                     data['filename'].append(file)
                     data['image'].append(im)
+                    if augment:
+                        # Mirror the image
+                        mirrored_image = np.fliplr(im)
+                        # Add the mirrored image to the data
+                        data['label'].append(subdir)
+                        data['image'].append(mirrored_image)
+                        data['filename'].append('augmented_' + file)
                     if max_data:
                         if counter >= max_data:
                             break
+    print("Done reading images")
     return data
+
 
 def load_data(pklname):
     data = None
@@ -51,6 +62,8 @@ def load_data(pklname):
         data = joblib.load(pklname)
         return data
 
+
+
 def save_data(data, pklname):
     joblib.dump(data, pklname)
 
@@ -59,7 +72,7 @@ def print_summary(data):
     print('labels', np.unique(data['label']))
     print('description: ', data['description'])
 
-def main_read_data(pklname, max_data = None):
+def main_read_data(pklname, augment = False, max_data = None):
     data_path = 'data/BigCats/' #Specify data path
     classes = os.listdir(data_path) #Define classes
     if '.DS_Store' in classes: classes.remove('.DS_Store') #For Mac Users, unwanted folder
@@ -67,5 +80,5 @@ def main_read_data(pklname, max_data = None):
     include = {'Leopard', 'Tiger', 'Cheetah', 'Jaguar', 'Lion'} #Include the wanted classes
 
     # Read the data
-    data = read_data(src = data_path, pklname = pklname, include = include, max_data = max_data)
+    data = read_data(src = data_path, pklname = pklname, include = include, augment=augment, max_data = max_data)
     return data

@@ -81,6 +81,7 @@ def calculate_histogram(data, model, n_clusters, VISUALIZE=False):
         idx = idx + 1
 
     if VISUALIZE:
+        
 
         all_histograms = []
         cur_label = label_vector[0]
@@ -117,7 +118,7 @@ def calculate_histogram(data, model, n_clusters, VISUALIZE=False):
 
 # -- SIFT --
 # https://www.analyticsvidhya.com/blog/2019/10/detailed-guide-powerful-sift-technique-image-matching-python/
-def apply_sift(data):
+def apply_sift(data, mife=False):
     for img in data['image']:
         img = np.float32(img)
         # Grayscale
@@ -134,6 +135,13 @@ def apply_sift(data):
         if 'sift_keypoints' not in data.keys():
             data['sift_keypoints'] = []
 
+        # Extract features from the mirrored image
+        if mife:
+            mirrored_image = np.fliplr(img)
+            sift = cv2.SIFT_create()
+            kp_mife, des_mife = sift.detectAndCompute(mirrored_image, None)
+            kp = np.concatenate((kp, kp_mife), axis=0)
+            des = np.concatenate((des, des_mife), axis=0)
         data['sift_description'].append(des)
         data['sift_keypoints'].append(kp)
 
