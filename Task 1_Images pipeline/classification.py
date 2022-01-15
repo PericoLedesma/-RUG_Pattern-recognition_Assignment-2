@@ -15,6 +15,7 @@ from sklearn.linear_model import LinearRegression
 # https://scikit-learn.org/stable/auto_examples/svm/plot_rbf_parameters.html
 # https://towardsdatascience.com/how-to-tune-multiple-ml-models-with-gridsearchcv-at-once-9fcebfcc6c23
 
+
 def get_accuracy_cross_validation(model, train_featvec, target):
     # Cross validate the ensemble
     cv = StratifiedShuffleSplit(n_splits=5, test_size=0.2, random_state=43)
@@ -22,6 +23,7 @@ def get_accuracy_cross_validation(model, train_featvec, target):
     mean_accuracy = np.mean(accuracy)
     print('Ensemble mean score: ', mean_accuracy)
     return mean_accuracy
+
 
 def train_RF_model(train_featvec, target):
     """Train a random forest classifier
@@ -34,10 +36,11 @@ def train_RF_model(train_featvec, target):
         model: trained RF model
     """
 
-    rf = RandomForestClassifier(n_estimators = 50, max_depth = 3)
+    rf = RandomForestClassifier(n_estimators=50, max_depth=3)
     rf.fit(train_featvec, target)
 
     return rf
+
 
 def train_SVM_model(train_featvec, target):
     """Train a support vector machine
@@ -51,13 +54,25 @@ def train_SVM_model(train_featvec, target):
     """
     svm = SVC()
 
-    #Train model
+    # Train model
     svm.fit(train_featvec, target)
 
     return svm
 
 
-def train_model(train_featvec, target, n_models = 3, DEBUG=False):
+def get_best_model(model, params, train_featvec, target, name):
+    cv = StratifiedShuffleSplit(n_splits=5, test_size=0.2, random_state=42)
+
+    # TODO add scoring (e.g. scoring = roc_auc_score)
+    # n_jobs=-1 means that all CPUs will be used
+    grid = GridSearchCV(model, param_grid=params,
+                        cv=cv, n_jobs=-1, error_score=0.0, verbose=0)
+    grid.fit(train_featvec, target)
+
+    return grid
+
+
+def train_model(train_featvec, target, n_models=3, DEBUG=False):
     """Train an ensemble of classifiers
 
     Args:
@@ -72,65 +87,72 @@ def train_model(train_featvec, target, n_models = 3, DEBUG=False):
 
     #import pdb; pdb.set_trace()
 
+    estimators = []
+
+    # TODO consider other parameter settings
+
     # Set the parameters for the grid search
     # SVM
     clf1 = SVC()
-    # TODO extend the amount of parameters
     svm_params = {}
-    svm_params['classifier__C'] = np.logspace(-2, 3, 6)
-    svm_params['classifier__gamma'] = ['scale', 'auto']
-    svm_params['classifier__kernel'] = ['linear', 'poly', 'rbf', 'sigmoid']
-    svm_params['classifier'] = [clf1]
+    svm_params['C'] = np.logspace(-2, 3, 6)
+    svm_params['gamma'] = ['scale', 'auto']
+    svm_params['kernel'] = ['linear', 'poly', 'rbf', 'sigmoid']
+
+    svc = get_best_model(clf1, svm_params, train_featvec, target, 'SVM')
+    estimators.append(('SVM', svc.best_estimator_,
+                      svc.best_params_, svc.best_score_))
 
     # Logistic Regression
     clf2 = LogisticRegression()
-    # TODO extend the amount of parameters
     logr_params = {}
-    logr_params['classifier__penalty'] = ['l1', 'l2']
-    logr_params['classifier__tol'] = np.logspace(-4, -1, 4)
-    logr_params['classifier__C'] = np.logspace(-2, 3, 6)
-    logr_params['classifier'] = [clf2]
+    logr_params['penalty'] = ['l1', 'l2']
+    logr_params['tol'] = np.logspace(-4, -1, 4)
+    logr_params['C'] = np.logspace(-2, 3, 6)
 
+    logreg = get_best_model(
+        clf2, logr_params, train_featvec, target, 'Logistic Regression')
+    estimators.append(('Logistic Regression', logreg.best_estimator_,
+                      logreg.best_params_, logreg.best_score_))
 
-    # Create the pipeline
-    pipeline = Pipeline([('classifier', SVC())])
-    grid_search_params = [svm_params, logr_params]
+    for estimator in estimators:
+        print(
+            "The best parameters for %s are %s with a score of %0.2f"
+            % (estimator[0], estimator[2], estimator[3])
+        )
+    # cv = StratifiedShuffleSplit(n_splits=5, test_size=0.2, random_state=42)
 
+    # # TODO add scoring (e.g. scoring = roc_auc_score)
+    # # n_jobs=-1 means that all CPUs will be used
+    # grid = GridSearchCV(pipeline, param_grid=grid_search_params,
+    #                     cv=cv, n_jobs=-1, error_score=0.0, verbose=0)
+    # grid.fit(train_featvec, target)
 
-    cv = StratifiedShuffleSplit(n_splits=5, test_size=0.2, random_state=42)
+    # # FIXME There exist many illegal comibnation os parameters
+    # # This results in many warnings
 
-    # TODO add scoring (e.g. scoring = roc_auc_score)
-    # n_jobs=-1 means that all CPUs will be used
-    grid = GridSearchCV(pipeline, param_grid=grid_search_params,
-                        cv=cv, n_jobs=-1, error_score=0.0, verbose=0)
-    grid.fit(train_featvec, target)
+    # print(
+    #     "The best parameters are %s with a score of %0.2f"
+    #     % (grid.best_params_, grid.best_score_)
+    # )
 
-    # FIXME There exist many illegal comibnation os parameters
-    # This results in many warnings
+    # # Order the results of the grid search by the best score
+    # order_by_rank = pd.DataFrame(
+    #     grid.cv_results_).sort_values(by='rank_test_score')
 
-    print(
-        "The best parameters are %s with a score of %0.2f"
-        % (grid.best_params_, grid.best_score_)
-    )
-
-    # Order the results of the grid search by the best score
-    order_by_rank = pd.DataFrame(
-        grid.cv_results_).sort_values(by='rank_test_score')
-
-    if DEBUG:
-        print(order_by_rank['params'])
+    # if DEBUG:
+    #     print(order_by_rank['params'])
 
     # Get the top N estimators
-    estimators = []
-    for rank in range(n_models):
-        params = order_by_rank['params'].iloc[rank]
-        estimators.append((str(rank),
-                           params['classifier'])
-        )
+    # for rank in range(n_models):
+    #     params = order_by_rank['params'].iloc[rank]
+    #     estimators.append((str(rank),
+    #                        params['classifier'])
+    #     )
 
     # Create an ensemble
     ensemble = VotingClassifier(
-        estimators=estimators,
+        estimators=[(i[0], i[1]) for i in estimators],
         voting='hard',
     )
 

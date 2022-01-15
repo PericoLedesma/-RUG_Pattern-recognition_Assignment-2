@@ -11,6 +11,8 @@ from classification import train_SVM_model
 from feature_extraction import apply_pca
 from data_analysis import plot_pca_components_variance
 from classification import train_RF_model
+from data_augmentation import augment
+
 width = 80
 base_name = 'big_cats'
 
@@ -24,7 +26,7 @@ n_clusters = 100
 
 def main():
     # Debug mode
-    DEBUG  = False
+    DEBUG  = True
     # Visualize the data in plots
     VISUALIZE = False
 
@@ -35,6 +37,9 @@ def main():
     # Print a summary of the data based on user input
     #print_summary = input("Do you want to print a summary of the data and see the images? Yes: 1, No: 0\n")
     #if print_summary == "1": analyze_data(data)
+    
+    # Augment the data
+    augment(data)
 
     # Start feature extraction
 
@@ -47,7 +52,7 @@ def main():
 
     #----------Apply PCA----------#
     #plot_pca_components_variance(X)
-    X = apply_pca(X)
+    # X = apply_pca(X)
 
     # Train an ensemble of classifiers
     accuracy, model = train_model(X, y, n_models=10, DEBUG=DEBUG)

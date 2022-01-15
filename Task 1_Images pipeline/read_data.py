@@ -20,6 +20,7 @@ def read_data(src, pklname, include, width = 150, height = None, MAX_DATA = None
     data['description'] = 'resized ({0}x{1}) big cat images in rgb'.format(int(width), int(height))
     data['label'] = []
     data['filename'] = []
+    # TODO rename data['data'] to data['images']
     data['data'] = []
 
     if MAX_DATA is not None:
