@@ -4,9 +4,8 @@ from data_analysis import *
 from feature_extraction import apply_sift
 import os.path
 from feature_extraction import cluster_sift_descriptions
-from classification import train_model
 from feature_extraction import calculate_histogram
-from classification import train_SVM_model, train_KNN_model, train_RF_model, get_accuracy_cross_validation
+from classification import Classifier
 from feature_extraction import apply_pca
 from data_analysis import plot_pca_components_variance
 from data_augmentation import augment_data
@@ -50,7 +49,7 @@ def main():
     # NOTE This should not be used. Augmentation should not be applied to test data
     AUGMENT = True
     # Use mirror invariant feature extraction (MIFE)
-    MIFE = True
+    MIFE = False
 
     pklname_images = f"big_cats{'_augment' if AUGMENT else ''}{'_debug' if DEBUG else ''}.pkl"
 
@@ -80,18 +79,16 @@ def main():
     # X = apply_pca(X)
 
     # Train an ensemble of classifiers
-    accuracy, model = train_model(
-        X, y, cluster_model=cluster_model, data=data, n_models=10, DEBUG=DEBUG, augment=AUGMENT)
-    svm_model = train_SVM_model(
-        X, y, cluster_model=cluster_model, data=data, augment=AUGMENT)
-    rf_model = train_RF_model(
-        X, y, cluster_model=cluster_model, data=data, augment=AUGMENT)
-    knn_model = train_KNN_model(
-        X, y, cluster_model=cluster_model, data=data, augment=AUGMENT)
+    classifier = Classifier(X, y, data, cluster_model=cluster_model, num_clust=n_clusters, augment=AUGMENT, debug=DEBUG)
+    accuracy, model = classifier.train_ensemble()
+    svm_model = classifier.train_SVM_model()
+    rf_model = classifier.train_RF_model()
+    knn_model = classifier.train_KNN_model()
 
-    accuracy_rf = get_accuracy_cross_validation(rf_model, X, y)
-    accuracy_svm = get_accuracy_cross_validation(svm_model, X, y)
-    accuracy_knn = get_accuracy_cross_validation(knn_model, X, y)
+    accuracy_rf = classifier.get_accuracy_cross_validation(rf_model)
+    accuracy_svm = classifier.get_accuracy_cross_validation(svm_model)
+    accuracy_knn = classifier.get_accuracy_cross_validation(knn_model)
+
     print("Number of clusters: ", n_clusters)
     print("accuracy rf = ",  accuracy_rf)
     print("accuracy svm = ",  accuracy_svm)
