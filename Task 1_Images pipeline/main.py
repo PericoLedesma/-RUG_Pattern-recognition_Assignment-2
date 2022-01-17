@@ -42,6 +42,27 @@ n_clusters = 20
 # Filter the images (there are many duplicates!)
 # Plot of data distribution
 
+# After bug fix (clustering within the cross validation) (No Aug)
+# All acc[0.5, 0.4, 0.6, 0.7, 0.4] .    Mean accuracy:  0.52 for SVM
+# Best model:  Pipeline(steps=[('svm', SVC(C=100))]) with accuracy:  0.52
+# All acc[0.6, 0.6, 0.5, 0.5, 0.5] .    Mean accuracy:  0.54 for LogReg
+# Best model:  Pipeline(steps=[('logreg', LogisticRegression(C=1000))]) with accuracy:  0.54
+# All acc[0.6, 0.6, 0.4, 0.6, 0.4] .    Mean accuracy:  0.52 for RF
+# Best model:  Pipeline(steps=[('rf', RandomForestClassifier(max_depth=7, n_estimators=50))]) with accuracy:  0.52
+# All acc[0.6, 0.6, 0.5, 0.6, 0.5] .    Mean accuracy:  0.5599999999999999 for Ensemble
+# Ensemble scores:  0.5599999999999999
+
+# After bug fix (With Aug)
+# All acc[0.5, 0.45, 0.4, 0.7, 0.6] .   Mean accuracy:  0.53 for SVM
+# Best model:  Pipeline(steps=[('svm', SVC(C=100))]) with accuracy:  0.53
+# All acc[0.55, 0.65, 0.5, 0.65, 0.55] .        Mean accuracy:  0.5800000000000001 for LogReg
+# Best model:  Pipeline(steps=[('logreg', LogisticRegression(C=1000))]) with accuracy:  0.5800000000000001
+# All acc[0.55, 0.45, 0.4, 0.6, 0.5] .  Mean accuracy:  0.5 for RF
+# Best model:  Pipeline(steps=[('rf', RandomForestClassifier(max_depth=7, n_estimators=50))]) with accuracy:  0.5
+# All acc[0.5, 0.55, 0.4, 0.7, 0.65] .  Mean accuracy:  0.56 for Ensemble
+# Ensemble scores:  0.56
+
+
 
 def main():
     # Debug mode
@@ -51,7 +72,7 @@ def main():
     VISUALIZE = True
     # Use data augmentation (not useful when using MIFE)
     # NOTE This should not be used. Augmentation should not be applied to test data
-    AUGMENT = False
+    AUGMENT = True
     # Use mirror invariant feature extraction (MIFE)
     MIFE = False
 
@@ -73,36 +94,29 @@ def main():
     #--- SIFT --- #
     data = apply_sift(data, mife=MIFE)
 
-    cluster_model = cluster_sift_descriptions(
-        data['sift_description'], NUM_CLUSTERS=n_clusters)
+    # cluster_model = cluster_sift_descriptions(
+    #     data['sift_description'], NUM_CLUSTERS=n_clusters)
 
-    X, y = calculate_histogram(
-        data['sift_description'], data['sift_keypoints'], data['label'], cluster_model, n_clusters, VISUALIZE=VISUALIZE)
+    # X, y = calculate_histogram(
+    #     data['sift_description'], data['sift_keypoints'], data['label'], cluster_model, n_clusters, VISUALIZE=VISUALIZE)
 
-    #----------Apply PCA----------#
+    # #----------Apply PCA----------#
     #plot_pca_components_variance(X)
     # X = apply_pca(X)
 
-    classifier = Classifier(data,
-                            cluster_model=cluster_model, num_clust=n_clusters, augment=AUGMENT, debug=DEBUG)
+    classifier = Classifier(data, num_clust=n_clusters, augment=AUGMENT, debug=DEBUG)
+    print("Number of clusters: ", n_clusters)
 
-    accuracy, model = classifier.train_ensemble()
+    # The code below is also executed in the train_ensemble
     svm_model = classifier.get_svm()
     rf_model = classifier.get_rf()
     logreg_model = classifier.get_logreg()
     knn_model = classifier.get_knn()
 
-    accuracy_rf = classifier.get_accuracy_cross_validation(rf_model)
-    accuracy_svm = classifier.get_accuracy_cross_validation(svm_model)
-    accuracy_logreg = classifier.get_accuracy_cross_validation(logreg_model)
-    accuracy_knn = classifier.get_accuracy_cross_validation(knn_model)
-
-    print("Number of clusters: ", n_clusters)
-    print("accuracy rf = ",  accuracy_rf)
-    print("accuracy svm = ",  accuracy_svm)
-    print("accuracy logreg = ",  accuracy_logreg)
-    print("accuracy knn = ",  accuracy_knn)
-
+    accuracy, model = classifier.train_ensemble([(svm_model, 'SVM'), (rf_model, 'RF'), (logreg_model, 'LogReg')],
+     voting_method='hard')
+    accuracy, model = classifier.train_ensemble([(svm_model, 'SVM'), (rf_model, 'RF'), (logreg_model, 'LogReg')],
+     voting_method='soft')
 
 if __name__ == "__main__":
     main()

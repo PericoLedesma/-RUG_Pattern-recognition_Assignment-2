@@ -81,8 +81,6 @@ def calculate_histogram(sift_des, sift_keyp, labels, model, n_clusters, VISUALIZ
         idx = idx + 1
 
     if VISUALIZE:
-        
-
         all_histograms = []
         cur_label = label_vector[0]
         hist_labels = [cur_label]
