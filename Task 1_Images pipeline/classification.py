@@ -205,7 +205,7 @@ class Classifier():
 
                     # TODO use something else than accuracy
                     # Get the cross validated accuracy
-                    mean_acc = self.get_accuracy_cross_validation(svc, 'SVM')
+                    mean_acc = self.get_accuracy_cross_validation(svc)
                     mean_accuracies.append(mean_acc)
                     param_list.append([svm_params['C'][i], svm_params['gamma'][j], svm_params['kernel'][k]])
 
@@ -247,7 +247,7 @@ class Classifier():
 
                     # TODO use something else than accuracy
                     # Get the cross validated accuracy
-                    mean_acc = self.get_accuracy_cross_validation(logreg, "LogReg")
+                    mean_acc = self.get_accuracy_cross_validation(logreg)
                     mean_accuracies.append(mean_acc)
                     param_list.append(
                         [logr_params['penalty'][i], logr_params['tol'][j], logr_params['C'][k]])
@@ -287,7 +287,7 @@ class Classifier():
 
                 # TODO use something else than accuracy
                 # Get the cross validated accuracy
-                mean_acc = self.get_accuracy_cross_validation(rf, "RF")
+                mean_acc = self.get_accuracy_cross_validation(rf)
                 mean_accuracies.append(mean_acc)
                 param_list.append(
                     [rf_params['n_estimators'][i], rf_params['max_depth'][j]])
@@ -331,7 +331,7 @@ class Classifier():
 
                     # TODO use something else than accuracy
                     # Get the cross validated accuracy
-                    mean_acc = self.get_accuracy_cross_validation(knn, "KNN")
+                    mean_acc = self.get_accuracy_cross_validation(knn)
                     mean_accuracies.append(mean_acc)
                     param_list.append(
                         [knn_params['n_neighbors'][i], knn_params['weights'][j], knn_params['algorithm'][k]])
@@ -362,7 +362,7 @@ class Classifier():
         )
 
         # Cross validate the ensemble
-        mean_acc = self.get_accuracy_cross_validation(ensemble, ("Ensemble" + voting_method))
+        mean_acc = self.get_accuracy_cross_validation(ensemble)
         print('Ensemble scores (', voting_method, '): ', mean_acc)
 
         return ensemble, mean_acc

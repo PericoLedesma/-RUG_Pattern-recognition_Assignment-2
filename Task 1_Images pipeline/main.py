@@ -8,7 +8,6 @@ from feature_extraction import calculate_histogram
 from classification import Classifier
 from feature_extraction import apply_pca
 from data_analysis import plot_pca_components_variance
-from data_augmentation import augment_data
 
 
 
@@ -29,10 +28,10 @@ from data_augmentation import augment_data
 
 def main():
     # Debug mode
-    DEBUG  = False
+    DEBUG  = True
     MAX_DATA = (10 if DEBUG else None)
     # Use data augmentation (not useful when using MIFE)
-    AUGMENT = True
+    AUGMENT = False
     # Use mirror invariant feature extraction (MIFE)
     # FIXME currently not working
     MIFE = False
