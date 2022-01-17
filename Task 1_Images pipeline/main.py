@@ -34,7 +34,7 @@ from data_analysis import plot_pca_components_variance
 
 def main():
     # Debug mode
-    DEBUG  = True
+    DEBUG  = False
     MAX_DATA = (10 if DEBUG else None)
     # Use data augmentation (not useful when using MIFE)
     AUGMENT = False
