@@ -16,12 +16,14 @@ from data_analysis import plot_pca_components_variance
 # TODO Consider other metrics (besides accuracy)
 # TODO Consider more parameters for the gridsearch
 
-# Using all data, without any augmentation
-# SVM accuracy:  0.5823529411764706 with params:  [100.0, 'scale', 'rbf']
-# RF accuracy:  0.5294117647058824 with params:  [10, 6]
-# LogReg accuracy:  0.5588235294117647 with params:  ['l2', 0.0001, 1000.0]
-# KNN accuracy:  0.5470588235294118 with params:  [11, 'distance', 'ball_tree']
-# Ensemble scores:  0.6294117647058824
+# Using all data, without any augmentation but using the better data set
+#30 Clusters
+#Ensemble scores ( hard ):  0.6424242424242423
+#SVM accuracy:  0.6363636363636364  with params:  [100, 'scale', 'rbf']
+#RF accuracy:  0.6363636363636364  with params:  [80, 6]
+#LogReg accuracy:  0.6363636363636364  with params:  ['l2', 0.0001, 1000]
+#KNN accuracy:  0.5696969696969696  with params:  [11, 'distance', 'ball_tree']
+#Ensemble scores:  0.6424242424242423
 
 # Using all data, with data augmentation
 # SVM accuracy:  0.5882352941176471 with params:  [0.1, 'scale', 'poly']
@@ -51,6 +53,8 @@ def main(n_clusters):
         # Since this is used for testing, the pickle file is created with the addition '_debug'
         data = main_read_data(pklname_images, max_data=MAX_DATA)
 
+
+
     # Sift feature extraction
     data = apply_sift(data, mife=MIFE)
 
@@ -76,5 +80,6 @@ def main(n_clusters):
     print ("Ensemble scores: ", acc_ensemble)
 
 if __name__ == "__main__":
-    for i in range(10, 60, 10):
-        main(i)
+
+    #for i in range(10, 60, 10):
+    main(30)

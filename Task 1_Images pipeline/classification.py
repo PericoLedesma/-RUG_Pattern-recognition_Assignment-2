@@ -269,11 +269,11 @@ class Classifier():
         """
 
         rf_params = {}
-        #rf_params['n_estimators'] = [10, 50, 100]
-        #rf_params['max_depth'] = [3, 4, 5, 6, 7]
-        rf_params = {}
-        rf_params['n_estimators'] = [10]
-        rf_params['max_depth'] = [6]
+        rf_params['n_estimators'] = [80]#range(10, 100, 10)
+        rf_params['max_depth'] = [3, 4, 5, 6, 7]
+        #rf_params = {}
+        #rf_params['n_estimators'] = [10]
+        #rf_params['max_depth'] = [6]
 
         mean_accuracies = []
         models = []
