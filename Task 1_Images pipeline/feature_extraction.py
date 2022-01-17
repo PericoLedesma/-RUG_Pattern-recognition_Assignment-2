@@ -19,13 +19,13 @@ def apply_pca(train_featvec):
     return pca_data
 
 
-def cluster_sift_descriptions(data, NUM_CLUSTERS):
+def cluster_sift_descriptions(sift_des, NUM_CLUSTERS):
     # Prepare data
     print("Training kmeans")
     # Create model
     kmeans = KMeans(n_clusters=NUM_CLUSTERS, random_state=0)
     # train model
-    sift_descriptors = np.concatenate(data['sift_description'], axis=0)
+    sift_descriptors = np.concatenate(sift_des, axis=0)
     kmeans.fit(sift_descriptors)
     return kmeans
 
@@ -61,22 +61,22 @@ def get_name_by_number(class_number):
     return 'UNKNOWN'
 
 
-def calculate_histogram(data, model, n_clusters, VISUALIZE=False):
+def calculate_histogram(sift_des, sift_keyp, labels, model, n_clusters, VISUALIZE=False):
     feature_vector = []
     label_vector = []
 
     # Make prediction to what class the keypoint belong and make a histogram of that
     idx = 0
-    for img_des in data['sift_description']:
+    for img_des in sift_des:
         # Predict and create histogram
         predict_kmeans = model.predict(img_des)
         hist, bin_edges = np.histogram(predict_kmeans, bins=n_clusters)
         # Normalize the histogram
-        hist = hist / len(data['sift_keypoints'][idx])
+        hist = hist / len(sift_keyp[idx])
         feature_vector.append(hist)
 
         # Create target vector for classification
-        label = get_class(data['label'][idx])
+        label = get_class(labels[idx])
         label_vector.append(label)
         idx = idx + 1
 

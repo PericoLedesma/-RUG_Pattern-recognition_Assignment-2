@@ -38,6 +38,10 @@ n_clusters = 20
 # MIRROR in feature extraction
 # Ensemble met random forest
 
+# Look at the type of errors
+# Filter the images (there are many duplicates!)
+# Plot of data distribution
+
 
 def main():
     # Debug mode
@@ -47,7 +51,7 @@ def main():
     VISUALIZE = True
     # Use data augmentation (not useful when using MIFE)
     # NOTE This should not be used. Augmentation should not be applied to test data
-    AUGMENT = True
+    AUGMENT = False
     # Use mirror invariant feature extraction (MIFE)
     MIFE = False
 
@@ -69,29 +73,34 @@ def main():
     #--- SIFT --- #
     data = apply_sift(data, mife=MIFE)
 
-    cluster_model = cluster_sift_descriptions(data, NUM_CLUSTERS=n_clusters)
+    cluster_model = cluster_sift_descriptions(
+        data['sift_description'], NUM_CLUSTERS=n_clusters)
 
     X, y = calculate_histogram(
-        data, cluster_model, n_clusters, VISUALIZE=VISUALIZE)
+        data['sift_description'], data['sift_keypoints'], data['label'], cluster_model, n_clusters, VISUALIZE=VISUALIZE)
 
     #----------Apply PCA----------#
     #plot_pca_components_variance(X)
     # X = apply_pca(X)
 
-    # Train an ensemble of classifiers
-    classifier = Classifier(X, y, data, cluster_model=cluster_model, num_clust=n_clusters, augment=AUGMENT, debug=DEBUG)
+    classifier = Classifier(data,
+                            cluster_model=cluster_model, num_clust=n_clusters, augment=AUGMENT, debug=DEBUG)
+
     accuracy, model = classifier.train_ensemble()
-    svm_model = classifier.train_SVM_model()
-    rf_model = classifier.train_RF_model()
-    knn_model = classifier.train_KNN_model()
+    svm_model = classifier.get_svm()
+    rf_model = classifier.get_rf()
+    logreg_model = classifier.get_logreg()
+    knn_model = classifier.get_knn()
 
     accuracy_rf = classifier.get_accuracy_cross_validation(rf_model)
     accuracy_svm = classifier.get_accuracy_cross_validation(svm_model)
+    accuracy_logreg = classifier.get_accuracy_cross_validation(logreg_model)
     accuracy_knn = classifier.get_accuracy_cross_validation(knn_model)
 
     print("Number of clusters: ", n_clusters)
     print("accuracy rf = ",  accuracy_rf)
     print("accuracy svm = ",  accuracy_svm)
+    print("accuracy logreg = ",  accuracy_logreg)
     print("accuracy knn = ",  accuracy_knn)
 
 

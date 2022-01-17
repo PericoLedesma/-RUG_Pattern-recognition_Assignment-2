@@ -14,37 +14,45 @@ from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import LinearRegression
 
+from feature_extraction import cluster_sift_descriptions, calculate_histogram
+
 # https://scikit-learn.org/stable/auto_examples/svm/plot_rbf_parameters.html
 # https://towardsdatascience.com/how-to-tune-multiple-ml-models-with-gridsearchcv-at-once-9fcebfcc6c23
 
 
 class Classifier():
 
-    def __init__(self, x, y, data, cluster_model, num_clust, augment=False, debug=False):
+    def __init__(self, data, cluster_model, num_clust, augment=False, debug=False):
 
-        self.x = x
-        self.y = y
+        self.sift_des = data['sift_description']
+        self.keyp = data['keypoints']
+        self.y = data['label']
         self.data = data
         self.augment = augment
         self.debug = debug
         self.cluster_model = cluster_model
         self.num_clust = num_clust  # Number of clusters in the cluster model
 
-        self.all_x = x
-        self.all_y = y
+        self.all_sift_des = self.sift_des
+        self.all_keyp = self.keyp
+        self.all_y = self.y
 
         if augment:
-            self.aug_x, self.aug_y = self.augment_data()
-            self.all_x = self.all_x + self.aug_x
+            self.aug_sift_des, self.aug_keyp, self.aug_y = self.augment_data()
+            # TODO check list concatenation
+            self.all_sift_des = self.all_sift_des + self.aug_sift_des
+            self.all_keyp = self.all_keyp + self.aug_keyp
             self.all_y = self.all_y + self.aug_y
 
     def augment_data(self):
         """Augment the data
 
         Returns:
-            augmented_data: The augmented data
+            aug_sift_des (List): Augmented sift descriptions
+            aug_y (List): Augmented target values
         """
-        aug_x = []
+        aug_sift_des = []
+        aug_keyp = []
         aug_y = []
         # Augment the data
         for i in range(len(self.data['image'])):
@@ -54,97 +62,68 @@ class Classifier():
             sift = cv2.SIFT_create()
             img_kp, img_des = sift.detectAndCompute(
                 mirrored_image, None)
-            # Get the clusters
-            predict_kmeans = self.cluster_model.predict(img_des)
-            mirrored_hist, bin_edges = np.histogram(
-                predict_kmeans, bins=self.num_clust)
-            # Normalize the histogram
-            mirrored_hist = mirrored_hist / len(img_kp)
-            aug_x.append(mirrored_hist)
-            aug_y.append(self.data['label'][i])
-        return aug_x, aug_y
+            aug_sift_des.append(img_des)
+            aug_keyp.append(img_kp)
+            # # Get the clusters
+            # predict_kmeans = self.cluster_model.predict(img_des)
+            # mirrored_hist, bin_edges = np.histogram(
+            #     predict_kmeans, bins=self.num_clust)
+            # # Normalize the histogram
+            # mirrored_hist = mirrored_hist / len(img_kp)
+            # aug_x.append(mirrored_hist)
+            # aug_y.append(self.data['label'][i])
+        return aug_sift_des, aug_keyp, aug_y
 
-    def get_accuracy_cross_validation(self, model):
-        # Cross validate the model
-        cv = StratifiedShuffleSplit(n_splits=5, test_size=0.2, random_state=43)
-        accuracy = cross_val_score(
-            model, self.all_x, self.all_y, cv=cv)
-        mean_accuracy = np.mean(accuracy)
-        return mean_accuracy
+    def get_accuracy_cross_validation(self, model, model_name):
+        # Create cross validation splits
+        self.train_idxs, self.test_idxs = self.get_cv_split()
+        assert len(self.train_idxs) == len(self.test_idxs)
 
-    def train_KNN_model(self):
-        """Train a k-nearest neighbor classifier
+        # For each split do:
+        accuracies = []
+        for i, index_list in enumerate(range(len(self.train_idxs))):
+            # Create the training set
+            train_sift_des = [self.all_sift_des[k]
+                              for k in index_list]
+            train_keyp = [self.all_keyp[k] for k in index_list]
+            train_y = [self.all_y[k] for k in index_list]
 
-        Args:
-            train_featvec (List): List of feature vectors
-            target (List): List of target values
+            # Create cluster model based on train set
+            cluster_model = cluster_sift_descriptions(
+                train_sift_des, NUM_CLUSTERS=self.num_clust)
 
-        Returns:
-            model: Trained KNN model
-        """
+            # Convert all the sift features to clusters in a histogram
+            X, y = calculate_histogram(
+                train_sift_des, train_keyp, train_y, cluster_model, self.num_clust, VISUALIZE=True)
 
-        knn_model = KNeighborsClassifier(n_neighbors=3)
+            # Create the test set
+            test_sift_des = [self.all_sift_des[k]
+                             for k in self.test_idxs[i]]
+            test_keyp = [self.all_keyp[k]
+                         for k in self.test_idxs[i]]
+            test_y = [self.all_y[k] for k in self.test_idxs[i]]
 
-        knn_params = {'n_neighbors': [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21],
-                      'weights': ['uniform', 'distance'],
-                      'algorithm': ['ball_tree', 'kd_tree', 'brute']}
-        knn_model = self.get_best_model(
-            knn_model, knn_params, 'KNN')
+            # Convert all the sift features to clusters in a histogram
+            X_test, y_test = calculate_histogram(
+                test_sift_des, test_keyp, test_y, cluster_model, self.num_clust, VISUALIZE=True)
 
-        return knn_model
+            # Train a model using the train set
+            model.fit(X, y)
 
-    def train_RF_model(self):
-        """Train a random forest classifier
+            # Test the model using the test set
+            y_pred = model.predict(X_test)
 
-        Args:
-            train_featvec (List): List of feature vectors
-            target (List):
+            # Calculate accuracy
+            accuracy = accuracy_score(y_test, y_pred)
+            print("Accuracy: ", accuracy)
 
-        Returns:
-            model: trained RF model
-        """
+            # Store the accuracy
+            accuracies.append(accuracy)
+        
+        print("All acc ", accuracies, ".\tMean accuracy: ", np.mean(accuracies), " for ", model_name, '')
+        
+        return np.mean(accuracies)
 
-        rf = RandomForestClassifier(n_estimators=50, max_depth=3)
-        rf.fit(self.all_x, self.all_y)
-
-        return rf
-
-    def train_SVM_model(self):
-        """Train a support vector machine
-
-        Args:
-            train_featvec (List): List of feature vectors
-            target (List): List of target values
-
-        Returns:
-            model: Trained SVM model
-        """
-        svm = SVC()
-
-        # Train model
-        svm.fit(self.all_x, self.all_y)
-
-        return svm
-
-    def get_best_model(self, model, params, name):
-        """Get the best model for a given model and parameters
-
-        Args:
-            model (Model): Model to be trained
-            params (Dict): Parameters to be used for training
-            name (String): Name of the model
-
-        Returns:
-            model: Trained model
-        """
-        train_idxs, test_idxs = self.get_cv_split()
-        # TODO add scoring (e.g. scoring = roc_auc_score)
-        # n_jobs=-1 means that all CPUs will be used
-        grid = GridSearchCV(model, param_grid=params,
-                            cv=zip(train_idxs, test_idxs), n_jobs=-1, error_score=0.0, verbose=0)
-        grid.fit(self.all_x, self.all_y)
-
-        return grid
 
     def get_cv_split(self):
         strat_split = StratifiedShuffleSplit(
@@ -152,15 +131,121 @@ class Classifier():
         train_idxs = []
         test_idxs = []
         idx = 0
-        for train_idx, test_idx in strat_split.split(self.x, self.y):
+        for train_idx, test_idx in strat_split.split(self.sift_des, self.y):
             train_idxs.append(train_idx)
             test_idxs.append(test_idx)  
             if self.augment:
-                train_idxs[idx] = np.concatenate([train_idxs[idx],(train_idx + len(self.x))])
+                train_idxs[idx] = np.concatenate([train_idxs[idx],(train_idx + len(self.sift_des))])
                 test_idxs[idx] = np.concatenate([test_idxs[idx],(test_idx + len(self.y))])
             idx += 1
-            
         return train_idxs, test_idxs
+
+    def get_svm(self):
+        svm_params = {}
+        svm_params['C'] = np.logspace(-2, 3, 6)
+        svm_params['gamma'] = ['scale', 'auto']
+        svm_params['kernel'] = ['linear', 'poly', 'rbf', 'sigmoid']
+
+        mean_accuracies = []
+        models = []
+        for i in range(len(svm_params['C'])):
+            for j in range(len(svm_params['gamma'])):
+                for k in range(len(svm_params['kernel'])):
+                    # Create a pipeline
+                    pipe = Pipeline([('svm', SVC(C=svm_params['C'][i],
+                                                 gamma=svm_params['gamma'][j],
+                                                 kernel=svm_params['kernel'][k]))])
+                    models.append(pipe)
+
+                    # TODO use something else than accuracy
+                    # Get the cross validated accuracy
+                    mean_acc = self.get_accuracy_cross_validation(pipe, 'SVM')
+                    mean_accuracies.append(mean_acc)
+
+        # Store the best model based on the accuracy
+        best_model = models[np.argmax(mean_accuracies)]
+        print("Best model: ", best_model,
+              " with accuracy: ", np.max(mean_accuracies))
+        return best_model
+
+    def get_logreg(self):
+        logr_params = {}
+        logr_params['penalty'] = ['l1', 'l2']
+        logr_params['tol'] = np.logspace(-4, -1, 4)
+        logr_params['C'] = np.logspace(-2, 3, 6)
+
+        mean_accuracies = []
+        models = []
+        for i in range(len(logr_params['penalty'])):
+            for j in range(len(logr_params['tol'])):
+                for k in range(len(logr_params['C'])):
+                    # Create a pipeline
+                    pipe = Pipeline([('logreg', LogisticRegression(
+                        penalty=logr_params['penalty'][i], tol=logr_params['tol'][j], C=logr_params['C'][k]))])
+                    models.append(pipe)
+
+                    # TODO use something else than accuracy
+                    # Get the cross validated accuracy
+                    mean_acc = self.get_accuracy_cross_validation(pipe, "LogReg")
+                    mean_accuracies.append(mean_acc)
+
+        # Store the best model based on the accuracy
+        best_model = models[np.argmax(mean_accuracies)]
+        print("Best model: ", best_model,
+              " with accuracy: ", np.max(mean_accuracies))
+        return best_model
+
+    def get_rf(self):
+        rf_params = {}
+        rf_params['n_estimators'] = [10, 50, 100]
+        rf_params['max_depth'] = [3, 4, 5, 6, 7]
+
+        mean_accuracies = []
+        models = []
+        for i in range(len(rf_params['n_estimators'])):
+            for j in range(len(rf_params['max_depth'])):
+                # Create a pipeline
+                pipe = Pipeline([('rf', RandomForestClassifier(
+                    n_estimators=rf_params['n_estimators'][i], max_depth=rf_params['max_depth'][j]))])
+                models.append(pipe)
+
+                # TODO use something else than accuracy
+                # Get the cross validated accuracy
+                mean_acc = self.get_accuracy_cross_validation(pipe, "RF")
+                mean_accuracies.append(mean_acc)
+            
+        # Store the best model based on the accuracy
+        best_model = models[np.argmax(mean_accuracies)]
+        print("Best model: ", best_model, " with accuracy: ", np.max(mean_accuracies))
+        return best_model
+
+    def get_knn(self):
+        knn_model = KNeighborsClassifier()
+        knn_params = {'n_neighbors': [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21],
+                      'weights': ['uniform', 'distance'],
+                      'algorithm': ['ball_tree', 'kd_tree', 'brute']}
+        
+        mean_accuracies = []
+        models = []
+        for i in range(len(knn_params['n_neighbors'])):
+            for j in range(len(knn_params['weights'])):
+                for k in range(len(knn_params['algorithm'])):
+                    # Create a pipeline
+                    pipe = Pipeline([('knn', KNeighborsClassifier(
+                        n_neighbors=knn_params['n_neighbors'][i],
+                        weights=knn_params['weights'][j],
+                        algorithm=knn_params['algorithm'][k]))])
+                    models.append(pipe)
+
+                    # TODO use something else than accuracy
+                    # Get the cross validated accuracy
+                    mean_acc = self.get_accuracy_cross_validation(pipe, "KNN")
+                    mean_accuracies.append(mean_acc)
+
+        # Store the best model based on the accuracy
+        best_model = models[np.argmax(mean_accuracies)]
+        print("Best model: ", best_model, " with accuracy: ", np.max(mean_accuracies))
+        return best_model
 
     def train_ensemble(self):
         """Train an ensemble of classifiers
@@ -177,42 +262,22 @@ class Classifier():
 
         # Set the parameters for the grid search
         # SVM
-        clf1 = SVC()
-        svm_params = {}
-        svm_params['C'] = np.logspace(-2, 3, 6)
-        svm_params['gamma'] = ['scale', 'auto']
-        svm_params['kernel'] = ['linear', 'poly', 'rbf', 'sigmoid']
-
-        svc = self.get_best_model(clf1, svm_params, 'SVM')
-        estimators.append(('SVM', svc.best_estimator_,
-                           svc.best_params_, svc.best_score_))
+        svm = self.get_svm()
+        estimators.append(('SVM', svm))
 
         # Logistic Regression
-        clf2 = LogisticRegression()
-        logr_params = {}
-        logr_params['penalty'] = ['l1', 'l2']
-        logr_params['tol'] = np.logspace(-4, -1, 4)
-        logr_params['C'] = np.logspace(-2, 3, 6)
-
-        logreg = self.get_best_model(clf2, logr_params, 'Logistic Regression')
-        estimators.append(('Logistic Regression', logreg.best_estimator_,
-                           logreg.best_params_, logreg.best_score_))
+        logreg = self.get_logreg()
+        estimators.append(('Logistic Regression', logreg))
 
         # Random Forest
-        clf3 = RandomForestClassifier()
-        rf_params = {}
-        rf_params['n_estimators'] = [10, 50, 100]
-        rf_params['max_depth'] = [3, 4, 5, 6, 7]
+        rf = self.get_rf()
+        estimators.append(('Random Forest', rf))
 
-        rf = self.get_best_model(clf3, rf_params, 'Random Forest')
-        estimators.append(('Random Forest', rf.best_estimator_,
-                           rf.best_params_, rf.best_score_))
-
-        for estimator in estimators:
-            print(
-                "The best parameters for %s are %s with a score of %0.2f"
-                % (estimator[0], estimator[2], estimator[3])
-            )
+        # for estimator in estimators:
+        #     print(
+        #         "The best parameters for %s are %s with a score of %0.2f"
+        #         % (estimator[0], estimator[2], estimator[3])
+        #     )
         # cv = StratifiedShuffleSplit(n_splits=5, test_size=0.2, random_state=42)
 
         # # TODO add scoring (e.g. scoring = roc_auc_score)
@@ -250,10 +315,7 @@ class Classifier():
         )
 
         # Cross validate the ensemble
-        train_idxs, test_idxs = self.get_cv_split()
-        score = cross_val_score(ensemble, self.all_x, self.all_y, cv=zip(train_idxs, test_idxs))
-        mean_score = np.mean(score)
-        print('Ensemble scores: ', score)
-        print('Ensemble mean score: ', mean_score)
+        mean_acc = self.get_accuracy_cross_validation(ensemble, "Ensemble")
+        print('Ensemble scores: ', mean_acc)
 
-        return mean_score, ensemble
+        return mean_acc, ensemble
