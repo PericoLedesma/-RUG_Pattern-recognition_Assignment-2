@@ -9,14 +9,12 @@ from classification import Classifier
 from feature_extraction import apply_pca
 from data_analysis import plot_pca_components_variance
 
-# TODO PCA for Kmeans
 # TODO Visualize histogram/clusters
-# TODO SetScore
 # TODO Look at the type of errors
 # TODO Filter the images (there are many duplicates!)
-# TODO Plot of data distribution
-# TODO Other plots for data visualization/analysis
+# TODO Other plots for data visualization/analysis (Keypoints/SIFT)
 # TODO Consider other metrics (besides accuracy)
+# TODO Consider more parameters for the gridsearch
 
 # Using all data, without any augmentation
 # SVM accuracy:  0.5823529411764706 with params:  [100.0, 'scale', 'rbf']

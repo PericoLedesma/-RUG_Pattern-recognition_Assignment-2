@@ -197,7 +197,7 @@ class Classifier():
         for i in range(len(svm_params['C'])):
             for j in range(len(svm_params['gamma'])):
                 for k in range(len(svm_params['kernel'])):
-                    # Create a pipeline
+                    # Create a model
                     svc = SVC(C=svm_params['C'][i],
                                                  gamma=svm_params['gamma'][j],
                                                  kernel=svm_params['kernel'][k])
@@ -240,7 +240,7 @@ class Classifier():
         for i in range(len(logr_params['penalty'])):
             for j in range(len(logr_params['tol'])):
                 for k in range(len(logr_params['C'])):
-                    # Create a pipeline
+                    # Create a model
                     logreg = LogisticRegression(
                         penalty=logr_params['penalty'][i], tol=logr_params['tol'][j], C=logr_params['C'][k])
                     models.append(logreg)
@@ -280,7 +280,7 @@ class Classifier():
         param_list = []
         for i in range(len(rf_params['n_estimators'])):
             for j in range(len(rf_params['max_depth'])):
-                # Create a pipeline
+                # Create a model
                 rf = RandomForestClassifier(
                     n_estimators=rf_params['n_estimators'][i], max_depth=rf_params['max_depth'][j])
                 models.append(rf)
@@ -322,7 +322,7 @@ class Classifier():
         for i in range(len(knn_params['n_neighbors'])):
             for j in range(len(knn_params['weights'])):
                 for k in range(len(knn_params['algorithm'])):
-                    # Create a pipeline
+                    # Create a model
                     knn = KNeighborsClassifier(
                         n_neighbors=knn_params['n_neighbors'][i],
                         weights=knn_params['weights'][j],
