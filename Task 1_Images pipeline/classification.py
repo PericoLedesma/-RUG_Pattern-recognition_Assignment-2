@@ -87,7 +87,7 @@ class Classifier():
         Returns:
             accuracy (float): The accuracy of the model
         """
-    
+
         # Create cross validation splits
         if self.X_train is None or self.y_train is None or self.X_test is None or self.y_test is None:
             self.X_train, self.y_train, self.X_test, self.y_test = self.get_cv_split(n_splits)
@@ -128,12 +128,12 @@ class Classifier():
         # Create lists of indexes for train and test sets
         for train_idx, test_idx in strat_split.split(self.sift_des, self.y):
             train_idxs.append(train_idx)
-            test_idxs.append(test_idx)  
+            test_idxs.append(test_idx)
             if self.augment:
                 train_idxs[idx] = np.concatenate([train_idxs[idx],(train_idx + len(self.sift_des))])
                 test_idxs[idx] = np.concatenate([test_idxs[idx],(test_idx + len(self.y))])
             idx += 1
-        
+
         X_train = []
         y_train = []
         X_test = []
@@ -165,7 +165,7 @@ class Classifier():
             # Convert all the sift features to clusters in a histogram
             X_te, y_te = calculate_histogram(
                 test_sift_des, test_keyp, test_y, cluster_model, self.num_clust, VISUALIZE=False)
-            
+
             X_train.append(X_tr)
             y_train.append(y_tr)
             X_test.append(X_te)
@@ -183,13 +183,13 @@ class Classifier():
         """
 
         svm_params = {}
-        svm_params['C'] = np.logspace(-2, 3, 6)
-        svm_params['gamma'] = ['scale', 'auto']
-        svm_params['kernel'] = ['linear', 'poly', 'rbf', 'sigmoid']
-        # svm_params = {}
-        # svm_params['C'] = [100]
-        # svm_params['gamma'] = ['scale']
-        # svm_params['kernel'] = ['rbf']
+        #svm_params['C'] = np.logspace(-2, 3, 6)
+        #svm_params['gamma'] = #['scale', 'auto']
+        #svm_params['kernel'] = ['linear', 'poly', 'rbf', 'sigmoid']
+        svm_params = {}
+        svm_params['C'] = [100]
+        svm_params['gamma'] = ['scale']
+        svm_params['kernel'] = ['rbf']
 
         mean_accuracies = []
         models = []
@@ -225,14 +225,14 @@ class Classifier():
             params (tuple): The parameters of the best model
         """
 
+        #logr_params = {}
+        #logr_params['penalty'] = ['l2']
+        #logr_params['tol'] = np.logspace(-4, -1, 4)
+        #logr_params['C'] = np.logspace(-2, 3, 6)
         logr_params = {}
         logr_params['penalty'] = ['l2']
-        logr_params['tol'] = np.logspace(-4, -1, 4)
-        logr_params['C'] = np.logspace(-2, 3, 6)
-        # logr_params = {}
-        # logr_params['penalty'] = ['l2']
-        # logr_params['tol'] = [0.0001]
-        # logr_params['C'] = [1000]
+        logr_params['tol'] = [0.0001]
+        logr_params['C'] = [1000]
 
         mean_accuracies = []
         models = []
@@ -269,11 +269,11 @@ class Classifier():
         """
 
         rf_params = {}
-        rf_params['n_estimators'] = [10, 50, 100]
-        rf_params['max_depth'] = [3, 4, 5, 6, 7]
-        # rf_params = {}
-        # rf_params['n_estimators'] = [50]
-        # rf_params['max_depth'] = [7]
+        #rf_params['n_estimators'] = [10, 50, 100]
+        #rf_params['max_depth'] = [3, 4, 5, 6, 7]
+        rf_params = {}
+        rf_params['n_estimators'] = [10]
+        rf_params['max_depth'] = [6]
 
         mean_accuracies = []
         models = []
@@ -291,7 +291,7 @@ class Classifier():
                 mean_accuracies.append(mean_acc)
                 param_list.append(
                     [rf_params['n_estimators'][i], rf_params['max_depth'][j]])
-            
+
         # Store the best model based on the accuracy
         best_model = models[np.argmax(mean_accuracies)]
         best_params = param_list[np.argmax(mean_accuracies)]
@@ -300,22 +300,22 @@ class Classifier():
 
     def get_knn(self):
         """Get a k-nearest neighbors model using cross validation and a grid search
-        
+
         Returns:
             knn (sklearn model): The best k-nearest neighbors model
             accuracy (float): The accuracy of the best model
             params (tuple): The parameters of the best model
         """
 
+        #knn_params = {}
+        #knn_params['n_neighbors'] = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21]
+        #knn_params['weights'] = ['uniform', 'distance']
+        #knn_params['algorithm'] = ['ball_tree', 'kd_tree', 'brute']
         knn_params = {}
-        knn_params['n_neighbors'] = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21]
-        knn_params['weights'] = ['uniform', 'distance']
-        knn_params['algorithm'] = ['ball_tree', 'kd_tree', 'brute']
-        # knn_params = {}
-        # knn_params['n_neighbors'] = [13,]
-        # knn_params['weights'] = ['distance']
-        # knn_params['algorithm'] = ['brute']
-        
+        knn_params['n_neighbors'] = [11]
+        knn_params['weights'] = ['distance']
+        knn_params['algorithm'] = ['ball_tree']
+
         mean_accuracies = []
         models = []
         param_list = []
@@ -354,7 +354,7 @@ class Classifier():
             mean_acc: The mean accuracy of the ensemble
         """
 
-        
+
         # Create an ensemble
         ensemble = VotingClassifier(
             estimators=models,

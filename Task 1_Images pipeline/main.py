@@ -30,7 +30,7 @@ from data_analysis import plot_pca_components_variance
 # KNN accuracy:  0.5205882352941176 with params:  [1, 'uniform', 'ball_tree']
 # Ensemble scores:  0.5558823529411765
 
-def main():
+def main(n_clusters):
     # Debug mode
     DEBUG  = False
     MAX_DATA = (10 if DEBUG else None)
@@ -40,7 +40,7 @@ def main():
     # FIXME currently not working
     MIFE = False
 
-    n_clusters = 20
+
     pklname_images = f"big_cats{'_augment' if AUGMENT else ''}{'_debug' if DEBUG else ''}.pkl"
 
     # Load the images
@@ -76,4 +76,5 @@ def main():
     print ("Ensemble scores: ", acc_ensemble)
 
 if __name__ == "__main__":
-    main()
+    for i in range(10, 60, 10):
+        main(i)
