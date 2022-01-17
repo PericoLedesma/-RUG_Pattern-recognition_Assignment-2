@@ -23,26 +23,29 @@ from feature_extraction import cluster_sift_descriptions, calculate_histogram
 class Classifier():
 
     def __init__(self, data, num_clust, augment=False, debug=False):
+        self.data = data
 
+        # Original data
         self.sift_des = data['sift_description']
         self.keyp = data['sift_keypoints']
         self.y = data['label']
-        self.data = data
+
+        self.num_clust = num_clust  # Number of clusters in the k-means model
         self.augment = augment
         self.debug = debug
-        self.num_clust = num_clust  # Number of clusters in the cluster model
 
+        # Collections of all data (might inclue augmented data)
         self.all_sift_des = self.sift_des
         self.all_keyp = self.keyp
         self.all_y = self.y
 
         if augment:
             self.aug_sift_des, self.aug_keyp, self.aug_y = self.augment_data()
-            # TODO check list concatenation
             self.all_sift_des = self.all_sift_des + self.aug_sift_des
             self.all_keyp = self.all_keyp + self.aug_keyp
             self.all_y = self.all_y + self.aug_y
 
+        # Train and test subsets used for cross validation
         self.X_train = None
         self.y_train = None
         self.X_test = None
@@ -52,12 +55,14 @@ class Classifier():
         """Augment the data
 
         Returns:
-            aug_sift_des (List): Augmented sift descriptions
-            aug_y (List): Augmented target values
+            aug_sift_des (List): Sift descriptions of the augmented images
+            aug_keyp (List): Sift keypoints of the augmented images
+            aug_y (List): Target values of the augmented images
         """
         aug_sift_des = []
         aug_keyp = []
         aug_y = []
+
         # Augment the data
         for i in range(len(self.data['image'])):
             # Mirror the image
@@ -66,46 +71,55 @@ class Classifier():
             sift = cv2.SIFT_create()
             img_kp, img_des = sift.detectAndCompute(
                 mirrored_image, None)
+            # Add the augmented data to the corresponding lists
             aug_sift_des.append(img_des)
             aug_keyp.append(img_kp)
             aug_y.append(self.data['label'][i])
-            # # Get the clusters
-            # predict_kmeans = self.cluster_model.predict(img_des)
-            # mirrored_hist, bin_edges = np.histogram(
-            #     predict_kmeans, bins=self.num_clust)
-            # # Normalize the histogram
-            # mirrored_hist = mirrored_hist / len(img_kp)
-            # aug_x.append(mirrored_hist)
-            # aug_y.append(self.data['label'][i])
         return aug_sift_des, aug_keyp, aug_y
 
-    def get_accuracy_cross_validation(self, model, model_name, n_splits=5):
+    def get_accuracy_cross_validation(self, model, n_splits=5):
+        """Get the accuracy of a model using cross validation
+
+        Args:
+            model (sklearn model): The model to be tested
+            n_splits (int): Number of splits for cross validation
+
+        Returns:
+            accuracy (float): The accuracy of the model
+        """
+    
         # Create cross validation splits
         if self.X_train is None or self.y_train is None or self.X_test is None or self.y_test is None:
             self.X_train, self.y_train, self.X_test, self.y_test = self.get_cv_split(n_splits)
 
-        # For each split do:
         accuracies = []
         for i in range(n_splits):
             # Train a model using the train set
             model.fit(self.X_train[i], self.y_train[i])
-
             # Test the model using the test set
             y_pred = model.predict(self.X_test[i])
-
             # Calculate accuracy
+            # TODO look at other metrics besides accuracy
             accuracy = accuracy_score(self.y_test[i], y_pred)
-            print("Accuracy: ", accuracy)
-
             # Store the accuracy
             accuracies.append(accuracy)
-        
-        print("All acc ", accuracies, ".\tMean accuracy: ", np.mean(accuracies), " for ", model_name, '')
-        
+
         return np.mean(accuracies)
 
 
     def get_cv_split(self, n_splits=5):
+        """Get the train and test subsets for cross validation
+
+        Args:
+            n_splits (int): Number of splits for cross validation
+
+        Returns:
+            X_train (List): List of training data (Sift descriptors clustered by k-means)
+            y_train (List): List of training labels
+            X_test (List): List of test data (Sift descriptors clustered by k-means)
+            y_test (List): List of test labels
+        """
+        # Create cross validation splits
         strat_split = StratifiedShuffleSplit(
             n_splits=n_splits, test_size=0.2, random_state=42)
         train_idxs = []
@@ -160,17 +174,26 @@ class Classifier():
         return X_train, y_train, X_test, y_test
 
     def get_svm(self):
-        # svm_params = {}
-        # svm_params['C'] = np.logspace(-2, 3, 6)
-        # svm_params['gamma'] = ['scale', 'auto']
-        # svm_params['kernel'] = ['linear', 'poly', 'rbf', 'sigmoid']
+        """Get a SVM model using cross validation and a grid search
+
+        Returns:
+            svm (sklearn model): The best SVM model
+            accuracy (float): The accuracy of the best model
+            params (tuple): The parameters of the best model
+        """
+
         svm_params = {}
-        svm_params['C'] = [100]
-        svm_params['gamma'] = ['scale']
-        svm_params['kernel'] = ['rbf']
+        svm_params['C'] = np.logspace(-2, 3, 6)
+        svm_params['gamma'] = ['scale', 'auto']
+        svm_params['kernel'] = ['linear', 'poly', 'rbf', 'sigmoid']
+        # svm_params = {}
+        # svm_params['C'] = [100]
+        # svm_params['gamma'] = ['scale']
+        # svm_params['kernel'] = ['rbf']
 
         mean_accuracies = []
         models = []
+        param_list = []
         for i in range(len(svm_params['C'])):
             for j in range(len(svm_params['gamma'])):
                 for k in range(len(svm_params['kernel'])):
@@ -184,25 +207,36 @@ class Classifier():
                     # Get the cross validated accuracy
                     mean_acc = self.get_accuracy_cross_validation(svc, 'SVM')
                     mean_accuracies.append(mean_acc)
+                    param_list.append([svm_params['C'][i], svm_params['gamma'][j], svm_params['kernel'][k]])
 
         # Store the best model based on the accuracy
         best_model = models[np.argmax(mean_accuracies)]
+        best_params = param_list[np.argmax(mean_accuracies)]
         print("Best model: ", best_model,
               " with accuracy: ", np.max(mean_accuracies))
-        return best_model
+        return best_model, np.max(mean_accuracies), best_params
 
     def get_logreg(self):
-        # logr_params = {}
-        # logr_params['penalty'] = ['l1', 'l2']
-        # logr_params['tol'] = np.logspace(-4, -1, 4)
-        # logr_params['C'] = np.logspace(-2, 3, 6)
+        """Get a logistic regression model using cross validation and a grid search
+
+        Returns:
+            logreg (sklearn model): The best logistic regression model
+            accuracy (float): The accuracy of the best model
+            params (tuple): The parameters of the best model
+        """
+
         logr_params = {}
         logr_params['penalty'] = ['l2']
-        logr_params['tol'] = [0.0001]
-        logr_params['C'] = [1000]
+        logr_params['tol'] = np.logspace(-4, -1, 4)
+        logr_params['C'] = np.logspace(-2, 3, 6)
+        # logr_params = {}
+        # logr_params['penalty'] = ['l2']
+        # logr_params['tol'] = [0.0001]
+        # logr_params['C'] = [1000]
 
         mean_accuracies = []
         models = []
+        param_list = []
         for i in range(len(logr_params['penalty'])):
             for j in range(len(logr_params['tol'])):
                 for k in range(len(logr_params['C'])):
@@ -215,24 +249,35 @@ class Classifier():
                     # Get the cross validated accuracy
                     mean_acc = self.get_accuracy_cross_validation(logreg, "LogReg")
                     mean_accuracies.append(mean_acc)
+                    param_list.append(
+                        [logr_params['penalty'][i], logr_params['tol'][j], logr_params['C'][k]])
 
         # Store the best model based on the accuracy
         best_model = models[np.argmax(mean_accuracies)]
+        best_params = param_list[np.argmax(mean_accuracies)]
         print("Best model: ", best_model,
               " with accuracy: ", np.max(mean_accuracies))
-        return best_model
+        return best_model, np.max(mean_accuracies), best_params
 
     def get_rf(self):
-        # rf_params = {}
-        # rf_params['n_estimators'] = [10, 50, 100]
-        # rf_params['max_depth'] = [3, 4, 5, 6, 7]
+        """Get a random forest model using cross validation and a grid search
+
+        Returns:
+            rf (sklearn model): The best random forest model
+            accuracy (float): The accuracy of the best model
+            params (tuple): The parameters of the best model
+        """
 
         rf_params = {}
-        rf_params['n_estimators'] = [50]
-        rf_params['max_depth'] = [7]
+        rf_params['n_estimators'] = [10, 50, 100]
+        rf_params['max_depth'] = [3, 4, 5, 6, 7]
+        # rf_params = {}
+        # rf_params['n_estimators'] = [50]
+        # rf_params['max_depth'] = [7]
 
         mean_accuracies = []
         models = []
+        param_list = []
         for i in range(len(rf_params['n_estimators'])):
             for j in range(len(rf_params['max_depth'])):
                 # Create a pipeline
@@ -244,25 +289,36 @@ class Classifier():
                 # Get the cross validated accuracy
                 mean_acc = self.get_accuracy_cross_validation(rf, "RF")
                 mean_accuracies.append(mean_acc)
+                param_list.append(
+                    [rf_params['n_estimators'][i], rf_params['max_depth'][j]])
             
         # Store the best model based on the accuracy
         best_model = models[np.argmax(mean_accuracies)]
+        best_params = param_list[np.argmax(mean_accuracies)]
         print("Best model: ", best_model, " with accuracy: ", np.max(mean_accuracies))
-        return best_model
+        return best_model, np.max(mean_accuracies), best_params
 
     def get_knn(self):
-        # knn_params = {}
-        # knn_params['n_neighbors'] = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21]
-        # knn_params['weights'] = ['uniform', 'distance']
-        # knn_params['algorithm'] = ['ball_tree', 'kd_tree', 'brute']
-        knn_params = {}
-        knn_params['n_neighbors'] = [13,]
-        knn_params['weights'] = ['distance']
-        knn_params['algorithm'] = ['brute']
+        """Get a k-nearest neighbors model using cross validation and a grid search
         
+        Returns:
+            knn (sklearn model): The best k-nearest neighbors model
+            accuracy (float): The accuracy of the best model
+            params (tuple): The parameters of the best model
+        """
+
+        knn_params = {}
+        knn_params['n_neighbors'] = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21]
+        knn_params['weights'] = ['uniform', 'distance']
+        knn_params['algorithm'] = ['ball_tree', 'kd_tree', 'brute']
+        # knn_params = {}
+        # knn_params['n_neighbors'] = [13,]
+        # knn_params['weights'] = ['distance']
+        # knn_params['algorithm'] = ['brute']
         
         mean_accuracies = []
         models = []
+        param_list = []
         for i in range(len(knn_params['n_neighbors'])):
             for j in range(len(knn_params['weights'])):
                 for k in range(len(knn_params['algorithm'])):
@@ -277,20 +333,25 @@ class Classifier():
                     # Get the cross validated accuracy
                     mean_acc = self.get_accuracy_cross_validation(knn, "KNN")
                     mean_accuracies.append(mean_acc)
+                    param_list.append(
+                        [knn_params['n_neighbors'][i], knn_params['weights'][j], knn_params['algorithm'][k]])
 
         # Store the best model based on the accuracy
         best_model = models[np.argmax(mean_accuracies)]
+        best_params = param_list[np.argmax(mean_accuracies)]
         print("Best model: ", best_model, " with accuracy: ", np.max(mean_accuracies))
-        return best_model
+        return best_model, np.max(mean_accuracies), best_params
 
     def train_ensemble(self, models, voting_method='hard'):
         """Train an ensemble of classifiers
 
         Args:
             models (List(Tuples)): List of tupels (classifiers, name)
+            voting_method (str): The voting method to use. Defaults to 'hard'
 
         Returns:
-            model: Trained ensemble model
+            ensemble: Trained ensemble model
+            mean_acc: The mean accuracy of the ensemble
         """
 
         
@@ -304,4 +365,4 @@ class Classifier():
         mean_acc = self.get_accuracy_cross_validation(ensemble, ("Ensemble" + voting_method))
         print('Ensemble scores (', voting_method, '): ', mean_acc)
 
-        return mean_acc, ensemble
+        return ensemble, mean_acc
