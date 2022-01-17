@@ -4,87 +4,72 @@ from data_analysis import *
 from feature_extraction import apply_sift
 import os.path
 from feature_extraction import cluster_sift_descriptions
-from classification import train_model
 from feature_extraction import calculate_histogram
-from classification import get_accuracy_cross_validation
-from classification import train_SVM_model
+from classification import Classifier
 from feature_extraction import apply_pca
 from data_analysis import plot_pca_components_variance
-from classification import train_RF_model
-from data_augmentation import augment
 
-width = 80
-base_name = 'big_cats'
 
-n_clusters = 100
+
 
 # TODO PCA for Kmeans
-# TODO Other classifiers/ ensemble methods
-# TODO Visualize histogram/cluters
+# TODO Visualize histogram/clusters
 # TODO SetScore
+# TODO Look at the type of errors
+# TODO Filter the images (there are many duplicates!)
+# TODO Plot of data distribution
+# TODO Other plots for data visualization/analysis
+# TODO Consider other metrics (besides accuracy)
 
-
-# KNN
-# MIRROR in feature extraction
-# Ensemble met random forest
-
+# After bug fix all data no aug
+# Best model:  SVC(C=100.0) with accuracy:  0.5764705882352942
+# Best model:  RandomForestClassifier(max_depth=6) with accuracy:  0.5470588235294118
+# Ensemble scores(hard):  0.5647058823529412
 
 def main():
     # Debug mode
-    DEBUG  = False
+    DEBUG  = True
     MAX_DATA = (10 if DEBUG else None)
-    # Visualize the data in plots
-    VISUALIZE = False
-    # Use data augmentation
-    AUGMENT = True
+    # Use data augmentation (not useful when using MIFE)
+    AUGMENT = False
     # Use mirror invariant feature extraction (MIFE)
+    # FIXME currently not working
     MIFE = False
 
-    pklname = f"big_cats_{'augment' if AUGMENT else ''}_{'debug' if DEBUG else ''}.pkl"
+    n_clusters = 20
+    pklname_images = f"big_cats{'_augment' if AUGMENT else ''}{'_debug' if DEBUG else ''}.pkl"
 
-    # Load the data
-    data = load_data(pklname)
+    # Load the images
+    data = load_data(pklname_images)
 
     if data is None:
-        # NOTE MAX_DATA indicates the number of images to be read from each class
-        # Since this is used for testing, the pickle file is created with the addition '_test'
-        data = main_read_data(pklname, max_data=MAX_DATA)
+        # MAX_DATA indicates the number of images to be read from each class
+        # Since this is used for testing, the pickle file is created with the addition '_debug'
+        data = main_read_data(pklname_images, max_data=MAX_DATA)
 
-        # Print a summary of the data based on user input
-        #print_summary = input("Do you want to print a summary of the data and see the images? Yes: 1, No: 0\n")
-        #if print_summary == "1": analyze_data(data)
-        
-        if AUGMENT:
-            # Augment the data
-            data = augment(data)
+    # Sift feature extraction
+    data = apply_sift(data, mife=MIFE)
 
-        # Save the data to a pickle file
-        save_data(data, pklname)
-
-
-    # Start feature extraction
-    #--- SIFT --- #
-    data = apply_sift(data)
-
-    model = cluster_sift_descriptions(data, NUM_CLUSTERS=n_clusters)
-
-    X, y = calculate_histogram(data, model, n_clusters, VISUALIZE=VISUALIZE)
-
-    #----------Apply PCA----------#
-    #plot_pca_components_variance(X)
-    # X = apply_pca(X)
-
-    # Train an ensemble of classifiers
-    accuracy, model = train_model(X, y, n_models=10, DEBUG=DEBUG)
-    svm_model = train_SVM_model(X, y)
-    rf_model = train_RF_model(X, y)
-
-    accuracy_rf = get_accuracy_cross_validation(rf_model, X, y)
-    accuracy_svm = get_accuracy_cross_validation(svm_model, X, y)
+    classifier = Classifier(data, num_clust=n_clusters, augment=AUGMENT, debug=DEBUG)
     print("Number of clusters: ", n_clusters)
-    print("accuracy rf = ",  accuracy_rf, "\n")
-    print("accuracy svm = ",  accuracy_svm, "\n")
 
+    # The code below is also executed in the train_ensemble
+    svm_model, svm_acc, svm_params = classifier.get_svm()
+    rf_model, rf_acc, rf_params = classifier.get_rf()
+    logreg_model, logreg_acc, logreg_params = classifier.get_logreg()
+    knn_model, knn_acc, knn_params = classifier.get_knn()
+
+    ensemble, acc_ensemble = classifier.train_ensemble([('SVM', svm_model), ('RF', rf_model), ('LogReg', logreg_model)],
+     voting_method='hard')
+    # TODO Look at the possibility to change voting method to soft. This requires probability predictions (other y-values)
+    # accuracy_soft, model_soft = classifier.train_ensemble([('SVM', svm_model), ('RF', rf_model), ('LogReg', logreg_model)],
+    #  voting_method='soft')
+
+    print ("SVM accuracy: ", svm_acc, " with params: ", svm_params)
+    print ("RF accuracy: ", rf_acc, " with params: ", rf_params)
+    print ("LogReg accuracy: ", logreg_acc, " with params: ", logreg_params)
+    print ("KNN accuracy: ", knn_acc, " with params: ", knn_params)
+    print ("Ensemble scores: ", acc_ensemble)
 
 if __name__ == "__main__":
     main()

@@ -25,7 +25,8 @@ def read_data(src, pklname, include, max_data = None):
         print(f'File {pklname} already exists. Reading data from pickle file...')
         data = joblib.load(pklname)
         return data
-
+    
+    print("Reading images")
     #Read all images in PATH, resize and write to DESTIONATION_PATH
     for subdir in os.listdir(src):
         if subdir in include:
@@ -41,7 +42,9 @@ def read_data(src, pklname, include, max_data = None):
                     if max_data:
                         if counter >= max_data:
                             break
+    print("Done reading images")
     return data
+
 
 def load_data(pklname):
     data = None
