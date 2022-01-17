@@ -9,9 +9,6 @@ from classification import Classifier
 from feature_extraction import apply_pca
 from data_analysis import plot_pca_components_variance
 
-
-
-
 # TODO PCA for Kmeans
 # TODO Visualize histogram/clusters
 # TODO SetScore
@@ -21,10 +18,19 @@ from data_analysis import plot_pca_components_variance
 # TODO Other plots for data visualization/analysis
 # TODO Consider other metrics (besides accuracy)
 
-# After bug fix all data no aug
-# Best model:  SVC(C=100.0) with accuracy:  0.5764705882352942
-# Best model:  RandomForestClassifier(max_depth=6) with accuracy:  0.5470588235294118
-# Ensemble scores(hard):  0.5647058823529412
+# Using all data, without any augmentation
+# SVM accuracy:  0.5823529411764706 with params:  [100.0, 'scale', 'rbf']
+# RF accuracy:  0.5294117647058824 with params:  [10, 6]
+# LogReg accuracy:  0.5588235294117647 with params:  ['l2', 0.0001, 1000.0]
+# KNN accuracy:  0.5470588235294118 with params:  [11, 'distance', 'ball_tree']
+# Ensemble scores:  0.6294117647058824
+
+# Using all data, with data augmentation
+# SVM accuracy:  0.5882352941176471 with params:  [0.1, 'scale', 'poly']
+# RF accuracy:  0.5411764705882354 with params:  [50, 7]
+# LogReg accuracy:  0.5558823529411765 with params:  ['l2', 0.0001, 1000.0]
+# KNN accuracy:  0.5205882352941176 with params:  [1, 'uniform', 'ball_tree']
+# Ensemble scores:  0.5558823529411765
 
 def main():
     # Debug mode
