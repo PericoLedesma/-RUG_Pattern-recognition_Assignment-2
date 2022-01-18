@@ -18,12 +18,11 @@ from data_analysis import plot_pca_components_variance
 
 # Using all data, without any augmentation but using the better data set
 #30 Clusters
-#Ensemble scores ( hard ):  0.6424242424242423
-#SVM accuracy:  0.6363636363636364  with params:  [100, 'scale', 'rbf']
-#RF accuracy:  0.6363636363636364  with params:  [80, 6]
-#LogReg accuracy:  0.6363636363636364  with params:  ['l2', 0.0001, 1000]
-#KNN accuracy:  0.5696969696969696  with params:  [11, 'distance', 'ball_tree']
-#Ensemble scores:  0.6424242424242423
+#Ensemble scores ( hard ):  0.6545454545454545
+#SVM accuracy:  0.6424242424242423  with params:  [100, 'scale', 'rbf']
+#RF accuracy:  0.6363636363636364  with params:  [80, 7]
+#LogReg accuracy:  0.6303030303030303  with params:  ['l2', 0.0001, 1000]
+#Ensemble scores:  0.6545454545454545
 
 # Using all data, with data augmentation
 # SVM accuracy:  0.5882352941176471 with params:  [0.1, 'scale', 'poly']
@@ -65,7 +64,7 @@ def main(n_clusters):
     svm_model, svm_acc, svm_params = classifier.get_svm()
     rf_model, rf_acc, rf_params = classifier.get_rf()
     logreg_model, logreg_acc, logreg_params = classifier.get_logreg()
-    knn_model, knn_acc, knn_params = classifier.get_knn()
+    #knn_model, knn_acc, knn_params = classifier.get_knn()
 
     ensemble, acc_ensemble = classifier.train_ensemble([('SVM', svm_model), ('RF', rf_model), ('LogReg', logreg_model)],
      voting_method='hard')
@@ -76,7 +75,7 @@ def main(n_clusters):
     print ("SVM accuracy: ", svm_acc, " with params: ", svm_params)
     print ("RF accuracy: ", rf_acc, " with params: ", rf_params)
     print ("LogReg accuracy: ", logreg_acc, " with params: ", logreg_params)
-    print ("KNN accuracy: ", knn_acc, " with params: ", knn_params)
+    #print ("KNN accuracy: ", knn_acc, " with params: ", knn_params)
     print ("Ensemble scores: ", acc_ensemble)
 
 if __name__ == "__main__":

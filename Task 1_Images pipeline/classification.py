@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import cv2
-
+from sklearn.metrics import confusion_matrix
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import cross_val_score
@@ -93,17 +93,28 @@ class Classifier():
             self.X_train, self.y_train, self.X_test, self.y_test = self.get_cv_split(n_splits)
 
         accuracies = []
+        best_accuracy = 0
+        best_y_pred = []
+        best_y_test = []
         for i in range(n_splits):
             # Train a model using the train set
             model.fit(self.X_train[i], self.y_train[i])
             # Test the model using the test set
             y_pred = model.predict(self.X_test[i])
+
             # Calculate accuracy
             # TODO look at other metrics besides accuracy
             accuracy = accuracy_score(self.y_test[i], y_pred)
+            if accuracy > best_accuracy:
+                best_y_pred = y_pred
+                best_y_true = self.y_test[i]
+
             # Store the accuracy
             accuracies.append(accuracy)
 
+        print("Model = ", model, "\n")
+        print("confusion matrix = ", confusion_matrix(best_y_true, best_y_pred), "\n")
+        print("---------------------")
         return np.mean(accuracies)
 
 
@@ -342,7 +353,7 @@ class Classifier():
         print("Best model: ", best_model, " with accuracy: ", np.max(mean_accuracies))
         return best_model, np.max(mean_accuracies), best_params
 
-    def train_ensemble(self, models, voting_method='hard'):
+    def train_ensemble(self, models, voting_method='soft'):
         """Train an ensemble of classifiers
 
         Args:
