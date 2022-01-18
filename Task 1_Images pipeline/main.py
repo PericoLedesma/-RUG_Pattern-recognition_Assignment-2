@@ -18,11 +18,11 @@ from data_analysis import plot_pca_components_variance
 
 # Using all data, without any augmentation but using the better data set
 #30 Clusters
-#Ensemble scores ( hard ):  0.6606060606060605
-#SVM accuracy:  0.6363636363636364  with params:  [100, 'scale', 'rbf']
-#RF accuracy:  0.593939393939394  with params:  [80, 5]
-#LogReg accuracy:  0.6484848484848484  with params:  ['l2', 0.0001, 1000]
-#Ensemble scores:  0.6606060606060605
+#Ensemble scores ( hard ):  0.6696969696969697
+#SVM accuracy:  0.6515151515151515  with params:  [100, 'scale', 'rbf']
+#RF accuracy:  0.6212121212121211  with params:  [80, 5]
+#LogReg accuracy:  0.6515151515151516  with params:  ['l2', 0.0001, 1000]
+#Ensemble scores:  0.6696969696969697
 
 # Using all data, with data augmentation
 # SVM accuracy:  0.5882352941176471 with params:  [0.1, 'scale', 'poly']
