@@ -96,6 +96,11 @@ class Classifier():
         best_accuracy = 0
         best_y_pred = []
         best_y_test = []
+        conf_mat = [[0,0,0,0,0],
+                    [0,0,0,0,0],
+                    [0,0,0,0,0],
+                    [0,0,0,0,0],
+                    [0,0,0,0,0]]
         for i in range(n_splits):
             # Train a model using the train set
             model.fit(self.X_train[i], self.y_train[i])
@@ -105,15 +110,13 @@ class Classifier():
             # Calculate accuracy
             # TODO look at other metrics besides accuracy
             accuracy = accuracy_score(self.y_test[i], y_pred)
-            if accuracy > best_accuracy:
-                best_y_pred = y_pred
-                best_y_true = self.y_test[i]
 
+            conf_mat = conf_mat + np.matrix(confusion_matrix(self.y_test[i], y_pred))
             # Store the accuracy
             accuracies.append(accuracy)
 
         print("Model = ", model, "\n")
-        print("confusion matrix = ", confusion_matrix(best_y_true, best_y_pred), "\n")
+        print("confusion matrix = ", conf_mat, "\n")
         print("---------------------")
         return np.mean(accuracies)
 
