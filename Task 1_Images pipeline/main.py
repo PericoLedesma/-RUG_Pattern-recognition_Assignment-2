@@ -11,10 +11,10 @@ from data_analysis import plot_pca_components_variance
 
 # TODO Visualize histogram/clusters
 # TODO Look at the type of errors
-# TODO Filter the images (there are many duplicates!)
+
 # TODO Other plots for data visualization/analysis (Keypoints/SIFT)
 # TODO Consider other metrics (besides accuracy)
-# TODO Consider more parameters for the gridsearch
+
 
 # Using all data, without any augmentation but using the better data set
 #30 Clusters
