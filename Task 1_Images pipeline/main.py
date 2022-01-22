@@ -8,6 +8,7 @@ from feature_extraction import calculate_histogram
 from classification import Classifier
 from feature_extraction import apply_pca
 from data_analysis import plot_pca_components_variance
+from visualize import sift_bar_plot
 
 # TODO Visualize histogram/clusters
 # TODO Look at the type of errors
@@ -15,6 +16,8 @@ from data_analysis import plot_pca_components_variance
 # TODO Other plots for data visualization/analysis (Keypoints/SIFT)
 # TODO Consider other metrics (besides accuracy)
 
+
+# TODO Normalized Frequency
 
 # Using all data, without any augmentation but using the better data set
 #30 Clusters
@@ -40,6 +43,7 @@ def main(n_clusters):
     # Use mirror invariant feature extraction (MIFE)
     # FIXME currently not working
     MIFE = False
+    BARPLOT = True
 
 
     pklname_images = f"big_cats{'_augment' if AUGMENT else ''}{'_debug' if DEBUG else ''}.pkl"
@@ -52,10 +56,11 @@ def main(n_clusters):
         # Since this is used for testing, the pickle file is created with the addition '_debug'
         data = main_read_data(pklname_images, max_data=MAX_DATA)
 
-
-
     # Sift feature extraction
     data = apply_sift(data, mife=MIFE)
+
+    if BARPLOT:
+        sift_bar_plot(data, n_clusters)
 
     classifier = Classifier(data, num_clust=n_clusters, augment=AUGMENT, debug=DEBUG)
     print("Number of clusters: ", n_clusters)
@@ -81,4 +86,4 @@ def main(n_clusters):
 if __name__ == "__main__":
 
     #for i in range(10, 60, 10):
-    main(30)
+    main(n_clusters=30)

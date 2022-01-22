@@ -98,15 +98,15 @@ def calculate_histogram(sift_des, sift_keyp, labels, model, n_clusters, VISUALIZ
         all_histograms.append(avg_hist/label_vector.count(cur_label))
 
         # Plot the histograms in a single barplot next to each other
-        ind = np.arange(len(all_histograms[0]))
+        ind = np.arange(len(all_histograms[0]))+1
         width = 0.15
         fig, ax = plt.subplots()
         for i in range(len(all_histograms)):
             ax.bar(ind + (i * width), all_histograms[i], width, label=get_name_by_number(hist_labels[i]))
         ax.set_xticks(ind + width*0.5)
-        ax.set_ylabel('Frequency')
-        ax.set_xlabel('Cluster')
-        ax.set_title('Histogram of SIFT keypoints')
+        ax.set_ylabel('Normalized Frequency')
+        ax.set_xlabel('Cluster number')
+        ax.set_title('Histogram of clustered SIFT keypoints')
         ax.set_xticks(ind)
         ax.legend()
         plt.show()
