@@ -21,11 +21,11 @@ from visualize import sift_bar_plot
 
 # Using all data, without any augmentation but using the better data set
 #30 Clusters
-#Ensemble scores ( hard ):  0.6545454545454545
-#SVM accuracy:  0.6424242424242423  with params:  [100, 'scale', 'rbf']
-#RF accuracy:  0.6363636363636364  with params:  [80, 7]
-#LogReg accuracy:  0.6303030303030303  with params:  ['l2', 0.0001, 1000]
-#Ensemble scores:  0.6545454545454545
+#Ensemble scores ( hard ):  0.6696969696969697
+#SVM accuracy:  0.6515151515151515  with params:  [100, 'scale', 'rbf']
+#RF accuracy:  0.6212121212121211  with params:  [80, 5]
+#LogReg accuracy:  0.6515151515151516  with params:  ['l2', 0.0001, 1000]
+#Ensemble scores:  0.6696969696969697
 
 # Using all data, with data augmentation
 # SVM accuracy:  0.5882352941176471 with params:  [0.1, 'scale', 'poly']
