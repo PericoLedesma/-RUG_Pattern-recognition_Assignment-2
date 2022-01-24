@@ -4,11 +4,12 @@ from data_analysis import *
 from feature_extraction import apply_sift
 import os.path
 from feature_extraction import cluster_sift_descriptions
-from feature_extraction import calculate_histogram
+from feature_extraction import calculate_histogram, apply_umap
 from classification import Classifier
 from feature_extraction import apply_pca
 from data_analysis import plot_pca_components_variance
-from visualize import sift_bar_plot
+from visualize import sift_bar_plot, plot_umap
+
 
 # TODO Visualize histogram/clusters
 # TODO Look at the type of errors
@@ -43,7 +44,8 @@ def main(n_clusters):
     # Use mirror invariant feature extraction (MIFE)
     # FIXME currently not working
     MIFE = False
-    BARPLOT = True
+    BARPLOT = False
+    UMAP = True
 
 
     pklname_images = f"big_cats{'_augment' if AUGMENT else ''}{'_debug' if DEBUG else ''}.pkl"
@@ -60,7 +62,14 @@ def main(n_clusters):
     data = apply_sift(data, mife=MIFE)
 
     if BARPLOT:
-        sift_bar_plot(data, n_clusters)
+        feature_vector, label_vector = sift_bar_plot(data, n_clusters)
+        exit()
+
+    if UMAP:
+        feature_vector, label_vector = sift_bar_plot(data, n_clusters)
+        umap_data = apply_umap(feature_vector)
+        plot_umap(umap_data, label_vector)
+        exit()
 
     classifier = Classifier(data, num_clust=n_clusters, augment=AUGMENT, debug=DEBUG)
     print("Number of clusters: ", n_clusters)

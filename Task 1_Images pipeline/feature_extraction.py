@@ -4,6 +4,21 @@ import joblib
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
+from umap import UMAP
+
+
+def apply_umap(features):
+    """This function applies UMAP on the features
+    Args:
+        train_featvec (List): List of the feature vectors
+    """
+    print("Applying UMAP")
+    umap = UMAP(n_neighbors=10, min_dist=0.1, n_components=2)
+    umap_data = umap.fit_transform(features)
+    print("Done")
+
+    return umap_data
+    
 
 def apply_pca(train_featvec):
     """This function applies PCA on the features
