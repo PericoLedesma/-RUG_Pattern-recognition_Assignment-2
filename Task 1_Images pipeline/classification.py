@@ -111,12 +111,12 @@ class Classifier():
             # TODO look at other metrics besides accuracy
             accuracy = accuracy_score(self.y_test[i], y_pred)
 
-            conf_mat = conf_mat + np.matrix(confusion_matrix(self.y_test[i], y_pred, normalize=True))
+            #conf_mat = conf_mat + np.matrix(confusion_matrix(self.y_test[i], y_pred, normalize=True))
             # Store the accuracy
             accuracies.append(accuracy)
 
         print("Model = ", model, "\n")
-        print("confusion matrix = ", conf_mat, "\n")
+        #print("confusion matrix = ", conf_mat, "\n")
         print("---------------------")
         return np.mean(accuracies)
 
