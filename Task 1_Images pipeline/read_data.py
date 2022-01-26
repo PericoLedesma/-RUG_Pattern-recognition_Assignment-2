@@ -63,7 +63,7 @@ def print_summary(data):
     print('description: ', data['description'])
 
 def main_read_data(pklname, max_data = None):
-    data_path = 'data/BigCats_better/' #Specify data path
+    data_path = 'BigCats_better/' #Specify data path
     classes = os.listdir(data_path) #Define classes
     if '.DS_Store' in classes: classes.remove('.DS_Store') #For Mac Users, unwanted folder
 
