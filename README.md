@@ -10,6 +10,7 @@ The folder Task 1_Images pipeline contain the files for the image classification
 The folder Task 1_Numeric pipeline contains the filer for the genetic pipeline.
 
 A more detailed explanation about the pipelines can be found in our paper which can be found in this repository.
+This repository also contains Task 2 of the project which implements a pipeline for a creditcard fraud detection pipeline using semi-supervised learning
 
 Authors: <br />
 Rik Vegter <br />
