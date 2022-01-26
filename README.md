@@ -10,7 +10,7 @@ The folder Task 1_Images pipeline contain the files for the image classification
 The folder Task 1_Numeric pipeline contains the filer for the genetic pipeline.
 
 Authors:
-Rik Vegter
-Jeroen van Brandenburg
-Sarandis Doulgeris
-Pedro Rodriquez de Ledesma
+Rik Vegter__
+Jeroen van Brandenburg__
+Sarandis Doulgeris__
+Pedro Rodriquez de Ledesma__
