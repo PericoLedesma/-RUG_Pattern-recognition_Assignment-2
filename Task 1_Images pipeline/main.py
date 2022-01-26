@@ -45,7 +45,7 @@ def main(n_clusters):
     # FIXME currently not working
     MIFE = False
     BARPLOT = False
-    UMAP = True
+    UMAP = False
 
 
     pklname_images = f"big_cats{'_augment' if AUGMENT else ''}{'_debug' if DEBUG else ''}.pkl"
@@ -68,7 +68,7 @@ def main(n_clusters):
     if UMAP:
         feature_vector, label_vector = sift_bar_plot(data, n_clusters)
         umap_data = apply_umap(feature_vector)
-        plot_umap(umap_data, label_vector)
+        plot_umap(umap_data, label_vector, n_clusters)
         exit()
 
     classifier = Classifier(data, num_clust=n_clusters, augment=AUGMENT, debug=DEBUG)

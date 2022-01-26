@@ -115,6 +115,11 @@ def calculate_histogram(sift_des, sift_keyp, labels, model, n_clusters, VISUALIZ
         # Plot the histograms in a single barplot next to each other
         ind = np.arange(len(all_histograms[0]))+1
         width = 0.15
+        # Reorder the histograms and the labels
+        all_histograms = np.array(all_histograms)
+        all_histograms = all_histograms[np.argsort(hist_labels)]
+        hist_labels = np.array(hist_labels)
+        hist_labels = hist_labels[np.argsort(hist_labels)]
         fig, ax = plt.subplots()
         for i in range(len(all_histograms)):
             ax.bar(ind + (i * width), all_histograms[i], width, label=get_name_by_number(hist_labels[i]))

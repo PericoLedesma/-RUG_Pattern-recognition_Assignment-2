@@ -10,11 +10,15 @@ def sift_bar_plot(data, n_clusters):
                         data['sift_keypoints'], data['label'], model, n_clusters, VISUALIZE=True)
     return feature_vector, label_vector
 
-def plot_umap(umap_data, labels):
+def plot_umap(umap_data, labels, n_clusters):
     # Plot UMAP
     plt.figure(figsize=(10, 10))
-    colors = ['red', 'blue', 'green', 'yellow', 'orange']
+    colors = ['blue', 'orange', 'green', 'red', 'purple']
     cats = ['Cheetah', 'Jaguar', 'Leopard', 'Lion', 'Tiger']
+
+    # Reorder botht he umap_data and labels in the same order
+    umap_data = [umap_data[i] for i in np.argsort(labels)]
+    labels = [labels[i] for i in np.argsort(labels)]
 
     fig, ax = plt.subplots()
     for idx, lab in enumerate(labels):
@@ -24,6 +28,12 @@ def plot_umap(umap_data, labels):
 
     # https://stackoverflow.com/questions/19385639/duplicate-items-in-legend-in-matplotlib
     legend_without_duplicate_labels(ax)
+    # Title
+    plt.title('UMAP projection of clustered SIFT keypoints (n_clusters={})'.format(n_clusters))
+    # X-axis label
+    plt.xlabel('First UMAP dimension')
+    # Y-axis label
+    plt.ylabel('Second UMAP dimension')
     plt.show()
 
 
