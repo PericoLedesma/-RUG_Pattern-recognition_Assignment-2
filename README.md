@@ -9,7 +9,9 @@ We refer the user to the two separate folders in the repository which contains R
 The folder Task 1_Images pipeline contain the files for the image classification pipeline.
 The folder Task 1_Numeric pipeline contains the filer for the genetic pipeline.
 
-Authors:
+A more detailed explanation about the pipelines can be found in our paper which can be found in this repository.
+
+Authors: <br />
 Rik Vegter <br />
 Jeroen van Brandenburg <br />
 Sarandis Doulgeris <br />
