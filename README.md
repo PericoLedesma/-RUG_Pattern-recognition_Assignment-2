@@ -1,6 +1,7 @@
 # Creating Pattern Recognition Pipelines using Traditional Machine Learning methods
 
 This project is the result of a project for the course Pattern Recognition of the RuG Msc program.
+
 We create two pipelines using two different datasets using traditional machine learning methods.
 1. The first pipeline classifies images from the BigCats datasets.
 2. The second pipeline classifies different kinds of tumors using genetic codes.
